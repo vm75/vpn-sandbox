@@ -12,7 +12,7 @@ echo "tagging with ${IMAGE_ID} vm75/vpn-sandbox:latest vm75/vpn-sandbox:${VERSIO
 
 docker tag ${IMAGE_ID} vm75/vpn-sandbox:latest vm75/vpn-sandbox:${VERSION}
 
-if [ "$2" == push ] ; then
+if [ "$1" == push ] ; then
 	docker login
 	if [[ $? -eq 0 ]] ; then
 		docker push vm75/vpn-sandbox

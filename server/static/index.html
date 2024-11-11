@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>VPN Sandbox</title>
-  <link rel="icon" href="data:;base64,=">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma/css/bulma.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@creativebulma/bulma-divider/dist/bulma-divider.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -43,6 +43,17 @@
     /* Show the tooltip when hovering over the tooltip container */
     .tooltip:hover .tooltip-text {
       visibility: visible;
+    }
+
+    /* Custom style for attribution */
+    .attribution-link {
+      font-size: 0.75rem;
+      /* Smaller font size */
+      position: absolute;
+      bottom: 20px;
+      right: 30px;
+      color: #555;
+      /* Light gray color */
     }
   </style>
 </head>
@@ -295,7 +306,34 @@
               </list-editor>
             </div>
           </div>
-        </section>`,
+        </section>
+        <!-- Footer Section -->
+        <footer class="footer">
+          <div class="content has-text-centered">
+            <p>Follow the project on:</p>
+            <div class="buttons is-centered are-medium">
+              <!-- GitHub Button -->
+              <a href="https://github.com/vm75/vpn-sandbox" target="_blank" class="button is-dark">
+                <span class="icon">
+                  <i class="fab fa-github"></i>
+                </span>
+                <span>GitHub</span>
+              </a>
+
+              <!-- Docker Hub Button -->
+              <a href="https://hub.docker.com/repository/docker/vm75/vpn-sandbox" target="_blank" class="button is-info">
+                <span class="icon">
+                  <i class="fab fa-docker"></i>
+                </span>
+                <span>Docker Hub</span>
+              </a>
+            </div>
+            <!-- Attribution Link -->
+            <a href="https://www.flaticon.com/free-icons/vpn" title="vpn icons" target="_blank" class="attribution-link">
+              Vpn icons created by Ranah Pixel Studio - Flaticon
+            </a>
+          </div>
+        </footer>`,
       data() {
         return {
           currentTab: 'config',
