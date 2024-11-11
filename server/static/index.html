@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OpenVPN Proxy</title>
+  <title>VPN Sandbox</title>
   <link rel="icon" href="data:;base64,=">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma/css/bulma.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@creativebulma/bulma-divider/dist/bulma-divider.min.css">
@@ -59,13 +59,13 @@
       template: `
         <section class="section">
           <div class="container">
-            <h1 class="title">OpenVPN Proxy</h1>
+            <h1 class="title">VPN Sandbox</h1>
 
             <!-- Tabs -->
             <div class="tabs is-boxed">
               <ul>
                 <li :class="{ 'is-active': currentTab === 'config' }">
-                  <a @click="currentTab = 'config'">Proxy Config</a>
+                  <a @click="currentTab = 'config'">Sandbox Config</a>
                 </li>
                 <li :class="{ 'is-active': currentTab === 'servers' }">
                   <a @click="currentTab = 'servers'">OpenVPN Servers</a>
@@ -73,7 +73,7 @@
               </ul>
             </div>
 
-            <!-- OpenVPN Proxy Config -->
+            <!-- Sandbox Config -->
             <div v-if="currentTab === 'config'">
               <div class="columns">
                 <div class="container column">

@@ -1,0 +1,1 @@
+A container to run a VPN client (OpenVPN or Wireguard) and expose http & socks proxy. Has a web-ui built-in and also is able to run some custom (Linux) apps in the sandbox without exposing the host network.
