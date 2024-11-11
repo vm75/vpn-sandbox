@@ -19,7 +19,9 @@ func oneTimeSetup() {
 	utils.BackupResolvConf()
 
 	if _, err := os.Stat(markerFile); os.IsNotExist(err) {
-		if _, err := os.Stat(core.AppScript); err == nil {
+		if core.Testing {
+			utils.LogLn("Skipping apps setup for testing")
+		} else if _, err := os.Stat(core.AppScript); err == nil {
 			utils.LogF("Running one-time setup for apps script %s", core.AppScript)
 			cmd := exec.Command(core.AppScript, "setup")
 			cmd.Stdout = os.Stdout
@@ -45,15 +47,14 @@ func main() {
 		utils.LogFatal(err)
 	}
 
-	params, args := utils.SmartArgs("--data|-d=/data:,--port|-p=80:,--sudo", os.Args[1:])
+	params, args := utils.SmartArgs("--data|-d=/data:,--port|-p=80:,--test", os.Args[1:])
 	dataDir := params["--data"].GetValue()
-	sudoMode := params["--sudo"].IsSet()
+	core.Testing = params["--test"].IsSet()
 
 	// detect if this is an openvpn action
 	scriptType := os.Getenv("script_type")
 	appMode := core.WebServer
 	if scriptType != "" && len(args) > 0 && args[0][:3] == "tun" {
-		utils.InitLog(filepath.Join(core.VarDir, "vpn-"+scriptType+".log"))
 		appMode = core.OpenVPNAction
 	}
 
@@ -63,15 +64,17 @@ func main() {
 	}
 
 	if appMode == core.OpenVPNAction {
+		utils.InitLog(filepath.Join(core.VarDir, "vpn-"+scriptType+".log"))
+		utils.LogF("Running openvpn action %s", scriptType)
 		switch scriptType {
 		case "up":
-			utils.LogLn("logfile: " + filepath.Join(core.VarDir, "vpn-"+scriptType+".log"))
-			utils.LogLn("core.VarDir: " + core.VarDir)
-			utils.LogLn("Running script: " + scriptType)
+			utils.LogLn("Saving openvpn spec file")
 			actions.SaveOpenVPNSpec()
-			utils.SignalRunning(core.PidFile, core.VPN_UP)
+			utils.LogLn("Signaling vpn up to main process")
+			utils.SignalRunning(core.ServerPidFile, core.VPN_UP)
 		case "down":
-			utils.SignalRunning(core.PidFile, core.VPN_DOWN)
+			utils.LogLn("Signaling vpn down to main process")
+			utils.SignalRunning(core.ServerPidFile, core.VPN_DOWN)
 		}
 		os.Exit(0)
 	}
@@ -91,7 +94,7 @@ func main() {
 	actions.VpnDown()
 
 	// Register modules
-	openvpn.InitModule(sudoMode)
+	openvpn.InitModule()
 	http_proxy.InitModule()
 	socks_proxy.InitModule()
 

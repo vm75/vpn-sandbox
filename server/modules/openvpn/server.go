@@ -59,7 +59,7 @@ func runOpenVPN() {
 			"--data-ciphers", dataCiphers,
 			"--writepid", pidFile,
 		}
-		if useSudo {
+		if core.Testing {
 			cmd = append([]string{"sudo"}, cmd...)
 		}
 		openvpnCmd = exec.Command(
@@ -93,7 +93,7 @@ func killOpenVPN() {
 	var cmd []string = []string{
 		"/usr/bin/pkill", "-15", "-x", "openvpn",
 	}
-	if useSudo {
+	if core.Testing {
 		cmd = append([]string{"sudo"}, cmd...)
 	}
 

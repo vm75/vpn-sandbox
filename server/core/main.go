@@ -11,8 +11,9 @@ import (
 var DataDir string
 var ConfigDir string
 var VarDir string
-var PidFile string
+var ServerPidFile string
 var AppScript string
+var Testing bool
 
 type GlobalSettings struct {
 	VPNTypes      []string `json:"vpnTypes"`
@@ -51,7 +52,7 @@ func Init(dataDir string, appMode AppMode) error {
 	ConfigDir = filepath.Join(dataDir, "config")
 	AppScript = filepath.Join(dataDir, "apps.sh")
 	VarDir = filepath.Join(dataDir, "var")
-	PidFile = filepath.Join(VarDir, "vpn-sandbox.pid")
+	ServerPidFile = filepath.Join(VarDir, "vpn-sandbox.pid")
 
 	err := os.MkdirAll(ConfigDir, 0755)
 	if err != nil {
@@ -69,10 +70,10 @@ func Init(dataDir string, appMode AppMode) error {
 	utils.InitLog(filepath.Join(VarDir, "vpn-sandbox.log"))
 
 	// if pid file exists, and process is still running, return
-	if utils.SignalRunning(PidFile, syscall.SIGCONT) {
+	if utils.SignalRunning(ServerPidFile, syscall.SIGCONT) {
 		os.Exit(0)
 	}
-	err = os.WriteFile(PidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	err = os.WriteFile(ServerPidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
 	if err != nil {
 		return err
 	}

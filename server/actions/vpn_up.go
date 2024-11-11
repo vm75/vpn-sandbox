@@ -81,6 +81,13 @@ func VpnUp(netSpec *NetSpec) {
 	for _, nameserver := range netSpec.DNS {
 		sb.WriteString(fmt.Sprintf("nameserver %s\n", nameserver))
 	}
+
+	if core.Testing {
+		utils.LogLn("Skipping vpn up actions for testing")
+		utils.LogLn("resolv.conf: " + sb.String())
+		return
+	}
+
 	// write resolv.conf
 	if err := os.WriteFile("/etc/resolv.conf", []byte(sb.String()), 0644); err != nil {
 		utils.LogError("Error updating /etc/resolv.conf", err)

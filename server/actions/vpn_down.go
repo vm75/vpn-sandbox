@@ -34,6 +34,11 @@ func VpnDown() {
 	hostGateway := getHostGateway()
 	utils.LogLn("host gateway: " + hostGateway)
 
+	if core.Testing {
+		utils.LogLn("Skipping vpn down actions for testing")
+		return
+	}
+
 	// Set routes
 	// Remove all existing default routes
 	utils.RunCommand("/sbin/ip", "route", "del", "default")
