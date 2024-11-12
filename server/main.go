@@ -9,6 +9,7 @@ import (
 	"vpn-sandbox/modules/http_proxy"
 	"vpn-sandbox/modules/openvpn"
 	"vpn-sandbox/modules/socks_proxy"
+	"vpn-sandbox/modules/wireguard"
 	"vpn-sandbox/utils"
 	"vpn-sandbox/webserver"
 )
@@ -79,12 +80,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	utils.AddSignalHandler([]os.Signal{core.VPN_UP, core.VPN_DOWN}, func(sig os.Signal) {
+	utils.AddSignalHandler([]os.Signal{core.VPN_UP, core.VPN_DOWN, core.SHUTDOWN}, func(sig os.Signal) {
 		switch sig {
 		case core.VPN_UP:
 			actions.VpnUp(nil)
 		case core.VPN_DOWN:
 			actions.VpnDown()
+		case core.SHUTDOWN:
+			openvpn.Shutdown()
+			wireguard.Shutdown()
+			os.Exit(0)
 		}
 	})
 
@@ -95,6 +100,7 @@ func main() {
 
 	// Register modules
 	openvpn.InitModule()
+	wireguard.InitModule()
 	http_proxy.InitModule()
 	socks_proxy.InitModule()
 

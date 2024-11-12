@@ -11,20 +11,22 @@ import (
 )
 
 type NetSpec struct {
-	Dev        string   `json:"dev"`
-	Domains    []string `json:"domains"`
-	DNS        []string `json:"dns"`
-	VPNGateway string   `json:"vpn_gateway"`
+	Dev         string   `json:"dev"`
+	Domains     []string `json:"domains"`
+	DNS         []string `json:"dns"`
+	VPNGateway  string   `json:"vpn_gateway"`
+	VpnEndpoint string   `json:"vpn_endpoint"`
 }
 
 func SaveOpenVPNSpec() {
 	specFile := filepath.Join(core.VarDir, "openvpn.spec")
 
 	netSpec := &NetSpec{
-		Dev:        os.Getenv("dev"),
-		Domains:    []string{},
-		DNS:        []string{},
-		VPNGateway: os.Getenv("route_vpn_gateway"),
+		Dev:         os.Getenv("dev"),
+		Domains:     []string{},
+		DNS:         []string{},
+		VPNGateway:  os.Getenv("route_vpn_gateway"),
+		VpnEndpoint: "",
 	}
 
 	// iterate over foreign_option_N env vars
@@ -98,7 +100,19 @@ func VpnUp(netSpec *NetSpec) {
 	utils.RunCommand("/sbin/ip", "route", "del", "default")
 
 	// Default route for all traffic through the VPN tunnel
-	utils.RunCommand("/sbin/ip", "route", "add", "default", "via", netSpec.VPNGateway, "dev", netSpec.Dev)
+	if netSpec.VPNGateway == "" {
+		utils.RunCommand("/sbin/ip", "route", "add", "default", "dev", netSpec.Dev)
+	} else {
+		utils.RunCommand("/sbin/ip", "route", "add", "default", "via", netSpec.VPNGateway, "dev", netSpec.Dev)
+	}
+
+	if netSpec.VpnEndpoint != "" {
+		// get host gateway from resolv.conf
+		hostGateway := getHostGateway()
+		utils.LogLn("host gateway: " + hostGateway)
+
+		utils.RunCommand("/sbin/ip", "route", "add", netSpec.VpnEndpoint, "via", hostGateway)
+	}
 
 	// Set firewall rules
 	// Flush existing rules to start fresh

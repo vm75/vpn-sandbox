@@ -25,7 +25,7 @@ FROM alpine
 
 RUN apk --no-cache update
 RUN apk --no-cache upgrade
-RUN apk --no-cache --no-progress add ip6tables iptables openvpn bind-tools tinyproxy inotify-tools
+RUN apk --no-cache --no-progress add ip6tables iptables bind-tools tinyproxy inotify-tools openvpn wireguard-tools-wg
 
 ARG IMAGE_VERSION
 ARG BUILD_DATE

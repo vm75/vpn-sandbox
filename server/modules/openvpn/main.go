@@ -1,7 +1,6 @@
 package openvpn
 
 import (
-	"os"
 	"path/filepath"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
@@ -48,15 +47,6 @@ func InitModule() {
 	}
 
 	core.RegisterModule("openvpn", &openvpnConfig)
-
-	utils.AddSignalHandler([]os.Signal{core.SHUTDOWN}, func(_ os.Signal) {
-		openvpnConfig.Enabled = false
-		killOpenVPN()
-		if utils.IsRunning(openvpnCmd) {
-			openvpnCmd.Wait()
-		}
-		os.Exit(0)
-	})
 
 	if openvpnConfig.Enabled {
 		go runOpenVPN()

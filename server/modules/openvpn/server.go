@@ -100,3 +100,11 @@ func killOpenVPN() {
 	go utils.RunCommand(cmd[0], cmd[1:]...)
 	// openvpnCmd.Wait()
 }
+
+func Shutdown() {
+	openvpnConfig.Enabled = false
+	killOpenVPN()
+	if utils.IsRunning(openvpnCmd) {
+		openvpnCmd.Wait()
+	}
+}
