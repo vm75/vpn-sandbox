@@ -1,16 +1,16 @@
+<template>
+  <div class="select">
+    <select v-model="internalValue" @change="emitInput">
+      <option v-for="option in options" :key="getKey(option)" :value="getKey(option)"
+        :selected="getKey(option) === value">{{ getDisplayStr(option) }}
+      </option>
+    </select>
+  </div>
+</template>
+
+<script>
 export default {
-  template: `
-    <div class="select">
-      <select v-model="internalValue" @change="emitInput">
-        <option v-for="option in options"
-          :key="getKey(option)"
-          :value="getKey(option)"
-          :selected="getKey(option) === value">{{ getDisplayStr(option) }}
-        </option>
-      </select>
-    </div>
-  `,
-  name: 'enum',
+  name: 'enum-input',
   props: ['value', 'options'],
   data() {
     return {
@@ -38,3 +38,4 @@ export default {
     },
   }
 }
+</script>

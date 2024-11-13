@@ -1,4 +1,4 @@
-const template = `
+<template>
   <div v-if="isVisible">
     <div class="modal is-active">
       <div class="modal-background"></div>
@@ -30,10 +30,7 @@ const template = `
 
           <!-- Template-based fields -->
           <div v-if="config.templateName !== 'custom'">
-            <dynamic-form
-              :config="dynamicConfig"
-              v-model:data="config.fields"
-              @update:data="onDataUpdate">
+            <dynamic-form :config="dynamicConfig" v-model:data="config.fields" @update:data="onDataUpdate">
             </dynamic-form>
           </div>
 
@@ -52,12 +49,14 @@ const template = `
       </div>
     </div>
   </div>
-`;
+</template>
 
+<script>
 export default {
+  name: "edit-config",
   props: ["templates", "name", "templateName", "fields", "configData", "showOnLoad"],
   components: {
-    'dynamic-form': Vue.defineAsyncComponent(() => import('../utils/dynamic-form.js')),
+    'dynamic-form': Vue.defineAsyncComponent(() => importComponent('components/core/dynamic-form')),
   },
   data() {
     return {
@@ -70,7 +69,6 @@ export default {
       }
     }
   },
-  template: template,
   methods: {
     show(name, templateName, fields, configData) {
       this.isVisible = true;
@@ -108,3 +106,6 @@ export default {
     },
   }
 }
+</script>
+
+<style></style>

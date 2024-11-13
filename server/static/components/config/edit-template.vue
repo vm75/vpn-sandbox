@@ -1,4 +1,4 @@
-const template = `
+<template>
   <div v-if="isVisible">
     <div class="modal is-active">
       <div class="modal-background"></div>
@@ -11,7 +11,7 @@ const template = `
           <div class="field">
             <label class="label">Template Name</label>
             <div class="control">
-                <input class="input" v-model="template.name" placeholder="Template Name" />
+              <input class="input" v-model="template.name" placeholder="Template Name" />
             </div>
           </div>
           <div class="field">
@@ -28,9 +28,11 @@ const template = `
       </div>
     </div>
   </div>
-`;
+</template>
 
+<script>
 export default {
+  name: "edit-template",
   props: ["name", "content", "showOnLoad"],
   data() {
     return {
@@ -41,7 +43,6 @@ export default {
       }
     }
   },
-  template: template,
   methods: {
     show(name, content) {
       this.isVisible = true;
@@ -58,3 +59,4 @@ export default {
     },
   },
 }
+</script>

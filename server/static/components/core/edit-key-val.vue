@@ -1,4 +1,4 @@
-const template = `
+<template>
   <div v-if="isVisible">
     <div class="modal is-active">
       <div class="modal-background"></div>
@@ -25,10 +25,7 @@ const template = `
               </div>
               <div class="field-body">
                 <div class="field">
-                  <basic-input
-                    :type="type"
-                    v-model:value="newMapValue"
-                    :placeholder="placeholder">
+                  <basic-input :type="type" v-model:value="newMapValue" :placeholder="placeholder">
                   </basic-input>
                 </div>
               </div>
@@ -42,12 +39,14 @@ const template = `
       </div>
     </div>
   </div>
-`;
+</template>
 
+<script>
 export default {
+  name: "edit-key-val",
   props: ["title", "type", "placeholder", "showOnLoad", "initialKey", "initialValue"],
   components: {
-    'basic-input': Vue.defineAsyncComponent(() => import('./basic-input.js'))
+    'basic-input': Vue.defineAsyncComponent(() => importComponent('components/core/basic-input'))
   },
   data() {
     return {
@@ -56,7 +55,6 @@ export default {
       newMapValue: this.initialValue || '',
     }
   },
-  template: template,
   methods: {
     show(key, value) {
       this.newMapKey = key;
@@ -73,3 +71,4 @@ export default {
     },
   },
 }
+</script>

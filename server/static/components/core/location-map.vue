@@ -1,10 +1,12 @@
+<template>
+  <div>
+    <!-- Map Container -->
+    <div id="vue-map" ref="map" style="height: 200px; border-radius: 5px;"></div>
+  </div>
+</template>
+
+<script>
 export default {
-  template: `
-    <div>
-      <!-- Map Container -->
-      <div id="vue-map" ref="map" style="height: 200px; border-radius: 5px;"></div>
-    </div>
-  `,
   name: 'location-map',
   props: {
     latitude: {
@@ -75,3 +77,6 @@ export default {
     }
   }
 }
+</script>
+
+<style></style>

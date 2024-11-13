@@ -1,4 +1,4 @@
-const template = `
+<template>
   <div v-if="isVisible">
     <div class="modal is-active">
       <div class="modal-background"></div>
@@ -11,7 +11,7 @@ const template = `
           <div class="field">
             <label class="label">OpenVPN Provider</label>
             <div class="control">
-              <input class="input" v-model="server.name" placeholder="OpenVPN Provider" :disabled="!nameIsEditable"/>
+              <input class="input" v-model="server.name" placeholder="OpenVPN Provider" :disabled="!nameIsEditable" />
             </div>
           </div>
           <div class="field">
@@ -34,18 +34,18 @@ const template = `
                   <tr>
                     <th>Actions</th>
                     <th>Endpoint Name</th>
-                    <th v-for="(variable, index) in variables" :key="'var'+index">{{ variable }}</th>
+                    <th v-for="(variable, index) in variables" :key="'var' + index">{{ variable }}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(endpoint, index) in server.endpoints" :key="'endpoint'+index">
+                  <tr v-for="(endpoint, index) in server.endpoints" :key="'endpoint' + index">
                     <td>
                       <button class="button is-small is-danger" @click="deleteEndpoint(index)">🗑</button>
                     </td>
                     <td>
                       <input class="input" v-model="endpoint.name" placeholder="name" />
                     </td>
-                    <td v-for="(variable, vindex) in variables" :key="'varinput'+vindex">
+                    <td v-for="(variable, vindex) in variables" :key="'varinput' + vindex">
                       <input class="input" v-model="server.endpoints[index][variable]" :placeholder="variable" />
                     </td>
                   </tr>
@@ -61,7 +61,8 @@ const template = `
           <div class="field">
             <label class="label">ovpn Template</label>
             <div class="control">
-              <textarea class="textarea" v-model="server.template" placeholder="ovpn content" style="white-space: pre; overflow-x: auto; font-family: 'Courier New', Courier, monospace;"></textarea>
+              <textarea class="textarea" v-model="server.template" placeholder="ovpn content"
+                style="white-space: pre; overflow-x: auto; font-family: 'Courier New', Courier, monospace;"></textarea>
             </div>
           </div>
         </section>
@@ -72,9 +73,11 @@ const template = `
       </div>
     </div>
   </div>
-`;
+</template>
 
+<script>
 export default {
+  name: "edit-server",
   props: {
     server: {
       type: Object,
@@ -102,7 +105,6 @@ export default {
       nameIsEditable: true,
     }
   },
-  template: template,
   methods: {
     show(name, content) {
       this.isVisible = true;
@@ -148,19 +150,20 @@ export default {
   },
   mounted() {
     this.nameIsEditable = !this.server.name;
-
-    injectStyle('vue-bulma-input-style', `
-      .vue-bulma-input {
-          border: 1px solid #dbdbdb;
-          border-radius: 5px;
-          padding: 0.5rem;
-      }
-
-      .vue-bulma-input:focus-within {
-          border-color: #3273dc;
-          box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
-          outline: none;
-      }`
-    );
   }
 }
+</script>
+
+<style>
+.vue-bulma-input {
+  border: 1px solid #dbdbdb;
+  border-radius: 5px;
+  padding: 0.5rem;
+}
+
+.vue-bulma-input:focus-within {
+  border-color: #3273dc;
+  box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+  outline: none;
+}
+</style>

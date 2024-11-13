@@ -1,13 +1,7 @@
-const template = `
-  <edit-item ref="arrayItemModal"
-    :title="editValueTitle"
-    :type="editValueType"
-    @save="onSaveValue">
+<template>
+  <edit-item ref="arrayItemModal" :title="editValueTitle" :type="editValueType" @save="onSaveValue">
   </edit-item>
-  <edit-key-val ref="mapItemModal"
-    :title="editKeyValueTitle"
-    :type="editKeyValueType"
-    @save="onSaveKeyValue">
+  <edit-key-val ref="mapItemModal" :title="editKeyValueTitle" :type="editKeyValueType" @save="onSaveKeyValue">
   </edit-key-val>
   <div>
     <form @submit.prevent>
@@ -20,17 +14,13 @@ const template = `
             <div class="field is-small">
               <div class="control is-expanded">
                 <!-- Basic Input Handling -->
-                <basic-input v-if="isBasicType(field.type)"
-                  :type="field.type"
-                  v-model:value="formData[field.name]"
+                <basic-input v-if="isBasicType(field.type)" :type="field.type" v-model:value="formData[field.name]"
                   @change="onChange(field, formData[field.name])">
                   >
                 </basic-input>
 
                 <!-- Enum Input Handling -->
-                <enum-input v-if="field.type === 'enum'"
-                  v-model:value="formData[field.name]"
-                  :options="field.options"
+                <enum-input v-if="field.type === 'enum'" v-model:value="formData[field.name]" :options="field.options"
                   @change="onChange(field, formData[field.name])">
                   >
                 </enum-input>
@@ -47,21 +37,22 @@ const template = `
                     <tbody>
                       <tr v-for="(item, arrIndex) in formData[field.name]" :key="arrIndex">
                         <td>
-                          <button class="button is-rounded is-small is-info is-light" @click="editArrayItem(field, arrIndex)">
-                          ✎
+                          <button class="button is-rounded is-small is-info is-light"
+                            @click="editArrayItem(field, arrIndex)">
+                            ✎
                           </button>
-                          <button class="button is-rounded is-small is-danger is-light" @click="removeArrayItem(field, arrIndex)">
-                          🗑
+                          <button class="button is-rounded is-small is-danger is-light"
+                            @click="removeArrayItem(field, arrIndex)">
+                            🗑
                           </button>
                         </td>
                         <td>
-                          {{formData[field.name][arrIndex]}}
+                          {{ formData[field.name][arrIndex] }}
                         </td>
                       </tr>
                     </tbody>
                   </table>
-                  <button class="button is-small is-info"
-                    @click="addArrayItem(field)">➕</button>
+                  <button class="button is-small is-info" @click="addArrayItem(field)">➕</button>
                 </div>
 
                 <!-- Dynamic Map Handling -->
@@ -77,24 +68,22 @@ const template = `
                     <tbody>
                       <tr v-for="(value, key) in formData[field.name]" :key="key">
                         <td>
-                          <button class="button is-rounded is-small is-info is-light"
-                            @click="editMapItem(field, key)">✎
+                          <button class="button is-rounded is-small is-info is-light" @click="editMapItem(field, key)">✎
                           </button>
                           <button class="button is-rounded is-small is-danger is-light"
                             @click="removeMapItem(field, key)">🗑
                           </button>
                         </td>
                         <td>
-                          {{key}}
+                          {{ key }}
                         </td>
                         <td>
-                          {{formData[field.name][key]}}
+                          {{ formData[field.name][key] }}
                         </td>
                       </tr>
                     </tbody>
                   </table>
-                  <button class="button is-small is-info"
-                    @click="addMapItem(field)">➕</button>
+                  <button class="button is-small is-info" @click="addMapItem(field)">➕</button>
                 </div>
               </div>
             </div>
@@ -103,16 +92,17 @@ const template = `
       </div>
     </form>
   </div>
-`;
+</template>
 
+<script>
 export default {
   name: "dynamic-form",
   props: ["config", "data"],
   components: {
-    'basic-input': Vue.defineAsyncComponent(() => import('./basic-input.js')),
-    'enum-input': Vue.defineAsyncComponent(() => import('./enum-input.js')),
-    'edit-key-val': Vue.defineAsyncComponent(() => import('./edit-key-val.js')),
-    'edit-item': Vue.defineAsyncComponent(() => import('./edit-item.js')),
+    'basic-input': Vue.defineAsyncComponent(() => importComponent('components/core/basic-input')),
+    'enum-input': Vue.defineAsyncComponent(() => importComponent('components/core/enum-input')),
+    'edit-key-val': Vue.defineAsyncComponent(() => importComponent('components/core/edit-key-val')),
+    'edit-item': Vue.defineAsyncComponent(() => importComponent('components/core/edit-item')),
   },
   data() {
     return {
@@ -134,7 +124,6 @@ export default {
       formData: {},
     }
   },
-  template: template,
   watch: {
     config(newValue) {
       this.init(newValue);
@@ -260,3 +249,6 @@ export default {
     this.init(this.config);
   }
 }
+</script>
+
+<style></style>

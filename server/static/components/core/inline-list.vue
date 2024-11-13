@@ -1,25 +1,17 @@
-const template = `
+<template>
   <div class="entries-input">
     <div v-for="(entry, index) in entries" :key="index" class="tag is-link">
       {{ entry }}
-      <button
-        class="delete is-small ml-1"
-        @click.prevent="removeEntry(index)"
-      ></button>
+      <button class="delete is-small ml-1" @click.prevent="removeEntry(index)"></button>
     </div>
-    <input
-      class="input"
-      type="text"
-      :placeholder="placeholder"
-      v-model="input"
-      @keydown.enter.prevent="addEntry"
-      @keyup.space="addEntry"
-    />
+    <input class="input" type="text" :placeholder="placeholder" v-model="input" @keydown.enter.prevent="addEntry"
+      @keyup.space="addEntry" />
   </div>
-`;
+</template>
 
+<script>
 export default {
-  template: template,
+  name: "inline-list",
   props: {
     entries: {
       type: Array,
@@ -42,8 +34,6 @@ export default {
     return {
       input: "",
     }
-  },
-  computed: {
   },
   methods: {
     addEntry() {
@@ -77,35 +67,31 @@ export default {
           return this.pattern;
       }
     }
-  },
-  mounted() {
-    // Create a <style> element
-    const style = document.createElement('style');
-
-    // Define the CSS rules as a string
-    style.innerHTML = `
-      .entries-input {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.5rem;
-        border: 1px solid #dbdbdb;
-        border-radius: 4px;
-      }
-      .entries-input .input {
-        flex-grow: 1;
-        border: none;
-        box-shadow: none;
-        padding: 0;
-        margin: 0;
-      }
-      .entries-input .input:focus {
-        outline: none;
-        box-shadow: none;
-      }`
-
-    // Append the <style> element to the <head> of the document
-    document.head.appendChild(style);
   }
 }
+</script>
+
+<style>
+.entries-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid #dbdbdb;
+  border-radius: 4px;
+}
+
+.entries-input .input {
+  flex-grow: 1;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+.entries-input .input:focus {
+  outline: none;
+  box-shadow: none;
+}
+</style>

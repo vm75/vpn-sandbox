@@ -1,39 +1,39 @@
-const template = `
+<template>
   <table v-if="listLocal.length > 0" class="table is-striped is-fullwidth">
     <thead>
       <tr>
         <th>Actions</th>
-        <th>{{name}}</th>
+        <th>{{ name }}</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="(item, arrIndex) in listLocal" :key="arrIndex">
         <td>
           <button class="button is-rounded is-small is-info is-light" @click="editItemLocal(arrIndex)">
-          ✎
+            ✎
           </button>
           <button class="button is-rounded is-small is-danger is-light" @click="removeItemLocal(arrIndex)">
-          🗑
+            🗑
           </button>
         </td>
         <td>
-          {{getDisplayString(arrIndex)}}
+          {{ getDisplayString(arrIndex) }}
         </td>
       </tr>
     </tbody>
   </table>
   <button class="button is-small is-info" @click="addItemLocal()">➕</button>
-`;
+</template>
 
+<script>
 export default {
-  name: "edit-list",
+  name: "list-editor",
   props: ["name", "list", "editItem", "addItem", "removeItem", "displayString"],
   data() {
     return {
       listLocal: this.list || [],
     }
   },
-  template: template,
   watch: {
     list(newList) {
       this.listLocal = newList || [];
@@ -78,3 +78,4 @@ export default {
     }
   },
 }
+</script>

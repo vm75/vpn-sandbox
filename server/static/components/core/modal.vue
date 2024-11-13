@@ -1,23 +1,25 @@
-const template = `
-    <div v-if="isModalOpen">
-      <div class="modal is-active">
-        <div class="modal-background"></div>
-        <div class="modal-card">
-          <header class="modal-card-head">
-            <p class="modal-card-title">{{ title }}</p>
-          </header>
-          <section class="modal-card-body">
-          </section>
-          <footer class="modal-card-foot">
+<template>
+  <div v-if="isModalOpen">
+    <div class="modal is-active">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">{{ title }}</p>
+        </header>
+        <section class="modal-card-body">
+        </section>
+        <footer class="modal-card-foot">
           <button class="button mx-auto" @click="cancel">Cancel</button>
           <button class="button is-success mx-auto" @click="save">Save</button>
-          </footer>
-        </div>
+        </footer>
       </div>
     </div>
-`;
+  </div>
+</template>
 
+<script>
 export default {
+  name: "modal",
   props: ["show", "title"],
   data() {
     return {
@@ -25,7 +27,6 @@ export default {
       isModalOpen: this.show,
     }
   },
-  template: template,
   computed: {
   },
   methods: {
@@ -44,3 +45,4 @@ export default {
     this.init();
   }
 }
+</script>

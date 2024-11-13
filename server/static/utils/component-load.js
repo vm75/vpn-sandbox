@@ -1,16 +1,8 @@
-
+var __vueModules = {};
 var mountedComponents = {};
 
 function injectComponent({ name, source, elementId, data = {}, methods = {}, ref = '', parentElementId = null, onMount = null }) {
   var template = ``;
-
-  const getSourceUrl = (url) => {
-    try {
-      return new URL(url);
-    } catch (e) {
-      return new URL(url, document.baseURI);
-    }
-  }
 
   if (mountedComponents[elementId]) {
     mountedComponents[elementId].unmount();
@@ -40,8 +32,7 @@ function injectComponent({ name, source, elementId, data = {}, methods = {}, ref
   var components = {};
 
   if (typeof source === 'string') { // if component is a string, it's a URL
-    const sourceUrl = getSourceUrl(source);
-    components[name] = Vue.defineAsyncComponent(() => import(sourceUrl));
+    components[name] = Vue.defineAsyncComponent(() => importComponent(source));
   } else {
     components[name] = source;
   }
@@ -127,4 +118,56 @@ function injectScriptUrl(url, onload = null) {
 
 function isLoaded(url) {
   return !!document.getElementById(url);
+}
+
+// Utility function to download content from a URL, transpose it, create a Blob URL, and import the module
+async function __importVue(url) {
+  try {
+    // Step 1: Download the content of the URL
+    const response = await fetch(url);
+    const content = await response.text();
+
+    // Step 2: Transpose the string content (You can modify this method as needed)
+    const templateMatch = content.match(/<template>([\s\S]*?)<\/template>/);
+    const styleMatch = content.match(/<style(?:[^>]*)>([\s\S]*?)<\/style>/);
+    const scriptMatch = content.match(/<script>\s*export\s+default\s*{([\s\S]*?)}\s*<\/script>/);
+
+    const template = templateMatch ? templateMatch[1].trim() : '';
+    const script = scriptMatch ? scriptMatch[1].trim() : '';
+    const style = styleMatch ? styleMatch[1].trim() : '';
+
+    injectStyle(url, style);
+
+    const vueAsJs = `export default {
+      template: \`${template}\`,
+      ${script}
+    }`;
+
+    // Step 3: Create a Blob from the transposed content
+    const blob = new Blob([vueAsJs], { type: 'application/javascript' });
+
+    // Step 4: Create a URL for the Blob
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Step 5: Dynamically import the Blob URL
+    return await import(blobUrl);
+  } catch (error) {
+    console.error('Error during download and import:', error);
+  }
+}
+
+// Utility function to download content from a URL, transpose it, create a Blob URL, and import the module
+function importComponent(url) {
+  if (!__vueModules[url]) {
+    if (url.endsWith('.js')) {
+      url = window.location.origin + "/" + url;
+      __vueModules[url] = import(url)
+    } else {
+      if (!url.endsWith('.vue')) {
+        url += '.vue';
+      }
+      __vueModules[url] = __importVue(url);
+    }
+  }
+  return __vueModules[url];
 }
