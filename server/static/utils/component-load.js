@@ -149,12 +149,7 @@
 
       injectStyle(url, style);
 
-      const vueAsJs = `
-        ${imports}
-        export default {
-          template: \`${template}\`,
-          ${script}
-        }`;
+      const vueAsJs = `${imports}\nexport default {\n  template: \`${template}\`,\n  ${script}\n}`;
 
       // Step 3: Create a Blob from the transposed content
       const blob = new Blob([vueAsJs], { type: 'application/javascript' });
