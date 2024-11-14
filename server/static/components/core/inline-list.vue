@@ -4,8 +4,8 @@
       {{ entry }}
       <button class="delete is-small ml-1" @click.prevent="removeEntry(index)"></button>
     </div>
-    <input class="input" type="text" :placeholder="placeholder" v-model="input" @keydown.enter.prevent="addEntry"
-      @keyup.space="addEntry" />
+    <input :id="id" class="input" type="text" :placeholder="placeholder" v-model="input"
+      @keydown.enter.prevent="addEntry" @keyup.space="addEntry" />
   </div>
 </template>
 
@@ -13,6 +13,9 @@
 export default {
   name: "inline-list",
   props: {
+    id: {
+      type: String,
+    },
     entries: {
       type: Array,
       default: () => [],

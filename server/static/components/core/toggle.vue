@@ -1,8 +1,8 @@
 <template>
   <div>
-    <input v-if="type === 'checkbox'" type="checkbox" v-model="internalValue" @change="emitInput" />
+    <input v-if="type === 'checkbox'" :id="id" type="checkbox" v-model="internalValue" @change="emitInput" />
     <label v-if="type === 'switch'" class="toggle-switch">
-      <input type="checkbox" v-model="internalValue" @change="emitInput" />
+      <input :id="id" type="checkbox" v-model="internalValue" @change="emitInput" />
       <span class="toggle-slider round"></span>
     </label>
   </div>
@@ -11,7 +11,7 @@
 <script>
 export default {
   name: 'toggle',
-  props: ['type', 'value'],
+  props: ['id', 'type', 'value'],
   data() {
     return {
       internalValue: this.value, // Local copy of value for editing

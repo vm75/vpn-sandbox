@@ -1,6 +1,6 @@
 <template>
   <div class="select is-fullwidth">
-    <select v-model="internalValue" @change="emitInput">
+    <select :id="id" v-model="internalValue" @change="emitInput">
       <option :value="true">{{ trueStr }}</option>
       <option :value="false">{{ falseStr }}</option>
     </select>
@@ -10,7 +10,7 @@
 <script>
 export default {
   name: 'binary',
-  props: ['type', 'value'], // type can be yes-no, on-off, true-false
+  props: ['id', 'type', 'value'], // type can be yes-no, on-off, true-false
   data() {
     return {
       internalValue: this.toBool(this.value), // Local copy of value for editing

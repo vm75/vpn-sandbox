@@ -24,22 +24,23 @@
               <form>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label">VPN</label>
+                    <label class="label" for="vpn-switch">VPN</label>
                   </div>
                   <div class="field-body">
                     <div class="field control">
-                      <basic type="switch" v-model:value="openvpn.config.enabled" @update:value="toggleModule('vpn')">
+                      <basic id="vpn-switch" type="switch" v-model:value="openvpn.config.enabled"
+                        @update:value="toggleModule('vpn')">
                       </basic>
                     </div>
                   </div>
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label">Http Proxy</label>
+                    <label class="label" for="http-proxy-switch">Http Proxy</label>
                   </div>
                   <div class="field-body">
                     <div class="field control">
-                      <basic type="switch" v-model:value="http_proxy.config.enabled"
+                      <basic id="http-proxy-switch" type="switch" v-model:value="http_proxy.config.enabled"
                         @update:value="toggleModule('http_proxy')">
                       </basic>
                     </div>
@@ -47,11 +48,11 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label">Socks Proxy</label>
+                    <label class="label" for="socks-proxy-switch">Socks Proxy</label>
                   </div>
                   <div class="field-body">
                     <div class="field control">
-                      <basic type="switch" v-model:value="socks_proxy.config.enabled"
+                      <basic id="socks-proxy-switch" type="switch" v-model:value="socks_proxy.config.enabled"
                         @update:value="toggleModule('socks_proxy')">
                       </basic>
                     </div>
@@ -62,24 +63,24 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label">LAN Subnets</label>
+                    <label class="label" for="lan-subnets">LAN Subnets</label>
                   </div>
                   <div class="field-body">
                     <div class="field control is-fullwidth">
-                      <inline-list :name="'Subnet'" v-model:entries="global.config.subnets" type="subnet"
-                        @update:entries="setModified('global')">
+                      <inline-list id="lan-subnets" :name="'Subnet'" v-model:entries="global.config.subnets"
+                        type="subnet" @update:entries="setModified('global')">
                       </inline-list>
                     </div>
                   </div>
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label">VPN Type</label>
+                    <label class="label" for="vpn-type">VPN Type</label>
                   </div>
                   <div class="field-body">
                     <div class="field">
                       <div class="control select is-fullwidth">
-                        <select v-model="global.config.vpnType" @change="setModified('global')">
+                        <select id="vpn-type" v-model="global.config.vpnType" @change="setModified('global')">
                           <option v-for="vpnType in global.config.vpnTypes" :key="vpnType" :value="vpnType"
                             :selected="vpnType === 'openvpn'">
                             {{ vpnType }}
@@ -95,12 +96,13 @@
                   </div>
                   <div class="field is-horizontal">
                     <div class="field-label is-normal">
-                      <label class="label">OpenVPN Provider</label>
+                      <label class="label" for="openvpn-provider">OpenVPN Provider</label>
                     </div>
                     <div class="field-body">
                       <div class="field">
                         <div class="control select is-fullwidth">
-                          <select v-model="openvpn.config.serverName" @change="setModified('openvpn')">
+                          <select id="openvpn-provider" v-model="openvpn.config.serverName"
+                            @change="setModified('openvpn')">
                             <option v-for="server in openvpn.servers" :key="server.name" :value="server.name"
                               :selected="server.name === openvpn.config.serverName">
                               {{ server.name }}
@@ -112,11 +114,12 @@
                   </div>
                   <div class="field is-horizontal">
                     <div class="field-label is-normal">
-                      <label class="label">Server Endpoint</label>
+                      <label class="label" for="openvpn-endpoint">Server Endpoint</label>
                     </div>
                     <div class="field-body">
                       <div class="field control select is-fullwidth">
-                        <select v-model="openvpn.config.serverEndpoint" @change="setModified('openvpn')">
+                        <select id="openvpn-endpoint" v-model="openvpn.config.serverEndpoint"
+                          @change="setModified('openvpn')">
                           <option v-for="endpoint in endpoints" :key="endpoint.name" :value="endpoint.name"
                             :selected="endpoint.name === openvpn.config.serverEndpoint">
                             {{ endpoint.name }}
