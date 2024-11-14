@@ -34,17 +34,39 @@
 <script>
 export default {
   name: "edit-item",
-  props: ["title", "type", "placeholder", "showOnLoad", "initialValue"],
+  props: {
+    title: {
+      type: String,
+      required: true
+    },
+    type: {
+      type: String,
+      required: true
+    },
+    placeholder: {
+      type: String,
+      default: ''
+    },
+    showOnLoad: {
+      type: Boolean,
+      default: false
+    },
+    initialValue: {
+      type: null,
+      default: ''
+    },
+  },
   components: {
     'basic-input': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input'))
   },
   data() {
     return {
-      isVisible: this.showOnLoad || false,
-      newMapValue: this.initialValue || '',
+      isVisible: this.showOnLoad,
+      newMapValue: this.initialValue,
     }
   },
   methods: {
+    // Used to show the modal using component ref
     show(value) {
       this.newMapValue = value;
       this.isVisible = true;

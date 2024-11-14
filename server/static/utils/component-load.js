@@ -131,7 +131,7 @@
   }
 
   // Utility function to download content from a URL, transpose it, create a Blob URL, and import the module
-  async function __importVue(url) {
+  async function importVue(url) {
     try {
       // Step 1: Download the content of the URL
       const response = await fetch(url);
@@ -174,7 +174,7 @@
         if (!url.endsWith('.vue')) {
           url += '.vue';
         }
-        vueModules[url] = __importVue(url);
+        vueModules[url] = importVue(url);
       }
     }
     return vueModules[url];

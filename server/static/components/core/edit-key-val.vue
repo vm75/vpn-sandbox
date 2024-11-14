@@ -44,18 +44,44 @@
 <script>
 export default {
   name: "edit-key-val",
-  props: ["title", "type", "placeholder", "showOnLoad", "initialKey", "initialValue"],
+  props: {
+    title: {
+      type: String,
+      required: true
+    },
+    type: {
+      type: String,
+      required: true
+    },
+    placeholder: {
+      type: String,
+      default: ''
+    },
+    showOnLoad: {
+      type: Boolean,
+      default: false
+    },
+    initialKey: {
+      type: String,
+      default: ''
+    },
+    initialValue: {
+      type: null,
+      default: ''
+    },
+  },
   components: {
     'basic-input': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input'))
   },
   data() {
     return {
-      isVisible: this.showOnLoad || false,
-      newMapKey: this.initialKey || '',
-      newMapValue: this.initialValue || '',
+      isVisible: this.showOnLoad,
+      newMapKey: this.initialKey,
+      newMapValue: this.initialValue,
     }
   },
   methods: {
+    // Used to show the modal using component ref
     show(key, value) {
       this.newMapKey = key;
       this.newMapValue = value;

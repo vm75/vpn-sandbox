@@ -10,7 +10,21 @@
 <script>
 export default {
   name: 'binary',
-  props: ['id', 'type', 'value'], // type can be yes-no, on-off, true-false
+  props: {
+    id: {
+      type: String,
+      required: true
+    },
+    // type can be yes-no, on-off, true-false
+    type: {
+      type: String,
+      required: true
+    },
+    value: {
+      type: [String, Number, Boolean],
+      default: ''
+    },
+  },
   data() {
     return {
       internalValue: this.toBool(this.value), // Local copy of value for editing

@@ -11,7 +11,20 @@
 <script>
 export default {
   name: 'toggle',
-  props: ['id', 'type', 'value'],
+  props: {
+    id: {
+      type: String,
+      required: true
+    },
+    type: {
+      type: String,
+      required: true
+    },
+    value: {
+      type: Boolean,
+      default: false
+    },
+  },
   data() {
     return {
       internalValue: this.value, // Local copy of value for editing

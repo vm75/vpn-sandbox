@@ -19,15 +19,23 @@
 
 <script>
 export default {
-  name: "modal",
+  name: "modal-template",
+  props: {
+    show: {
+      type: Boolean,
+      required: true
+    },
+    title: {
+      type: String,
+      required: true
+    },
+  },
   props: ["show", "title"],
   data() {
     return {
       text: 'This is the default text.', // Initial text
       isModalOpen: this.show,
     }
-  },
-  computed: {
   },
   methods: {
     cancel() {

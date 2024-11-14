@@ -54,13 +54,38 @@
 <script>
 export default {
   name: "edit-config",
-  props: ["templates", "name", "templateName", "fields", "configData", "showOnLoad"],
+  props: {
+    templates: {
+      type: Array,
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    templateName: {
+      type: String,
+      required: true
+    },
+    fields: {
+      type: Array,
+      required: true
+    },
+    configData: {
+      type: Object,
+      default: () => ({}) // Default to an empty object if not provided
+    },
+    showOnLoad: {
+      type: Boolean,
+      default: false // Default to false if not provided
+    }
+  },
   components: {
     'dynamic-form': Vue.defineAsyncComponent(() => Component.import('components/core/dynamic-form')),
   },
   data() {
     return {
-      isVisible: this.showOnLoad || false,
+      isVisible: this.showOnLoad,
       config: {
         name: this.name,
         templateName: this.templateName,
@@ -70,6 +95,7 @@ export default {
     }
   },
   methods: {
+    // Used to show the modal using component ref
     show(name, templateName, fields, configData) {
       this.isVisible = true;
       this.config = { name: name, templateName: templateName, fields: fields, data: configData };

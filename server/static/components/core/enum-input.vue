@@ -2,7 +2,7 @@
   <div class="select">
     <select v-model="internalValue" @change="emitInput">
       <option v-for="option in options" :key="getKey(option)" :value="getKey(option)"
-        :selected="getKey(option) === value">{{ getDisplayStr(option) }}
+        :selected="getKey(option) === internalValue">{{ getDisplayStr(option) }}
       </option>
     </select>
   </div>
@@ -11,7 +11,16 @@
 <script>
 export default {
   name: 'enum-input',
-  props: ['value', 'options'],
+  props: {
+    value: {
+      type: String,
+      default: ''
+    },
+    options: {
+      type: Array,
+      required: true
+    }
+  },
   data() {
     return {
       internalValue: this.value, // Local copy of value for editing

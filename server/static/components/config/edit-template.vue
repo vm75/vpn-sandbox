@@ -33,10 +33,23 @@
 <script>
 export default {
   name: "edit-template",
-  props: ["name", "content", "showOnLoad"],
+  props: {
+    name: {
+      type: String,
+      required: true
+    },
+    contents: {
+      type: String,
+      default: ''
+    },
+    showOnLoad: {
+      type: Boolean,
+      default: false // Default to false if not provided
+    }
+  },
   data() {
     return {
-      isVisible: this.showOnLoad || false,
+      isVisible: this.showOnLoad,
       template: {
         name: this.name,
         content: this.content,

@@ -97,7 +97,16 @@
 <script>
 export default {
   name: "dynamic-form",
-  props: ["config", "data"],
+  props: {
+    config: {
+      type: Object,
+      required: true
+    },
+    data: {
+      type: Object,
+      required: true
+    },
+  },
   components: {
     'basic-input': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input')),
     'enum-input': Vue.defineAsyncComponent(() => Component.import('components/core/enum-input')),

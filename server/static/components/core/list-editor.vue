@@ -28,7 +28,33 @@
 <script>
 export default {
   name: "list-editor",
-  props: ["name", "list", "editItem", "addItem", "removeItem", "displayString"],
+  props: {
+    name: {
+      type: String,
+      required: true
+    },
+    list: {
+      type: Array,
+      required: true
+    },
+    editItem: {
+      type: Function,
+      default: null
+    },
+    addItem: {
+      type: Function,
+      default: null
+    },
+    removeItem: {
+      type: Function,
+      default: null
+    },
+    displayString: {
+      type: Function,
+      default: null
+    }
+  }
+  ,
   data() {
     return {
       listLocal: this.list || [],

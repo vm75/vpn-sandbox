@@ -28,7 +28,28 @@
 <script>
 export default {
   name: 'basic-input',
-  props: ['id', 'type', 'value', 'placeholder', 'options'],
+  props: {
+    id: {
+      type: String,
+      required: true
+    },
+    type: {
+      type: String,
+      required: true
+    },
+    value: {
+      type: [String, Number, Boolean],
+      default: ''
+    },
+    placeholder: {
+      type: String,
+      default: ''
+    },
+    options: {
+      type: Array,
+      default: () => []
+    },
+  },
   components: {
     'binary': Vue.defineAsyncComponent(() => Component.import('components/core/binary')),
     'toggle': Vue.defineAsyncComponent(() => Component.import('components/core/toggle'))
