@@ -56,7 +56,7 @@ export default {
   name: "edit-config",
   props: ["templates", "name", "templateName", "fields", "configData", "showOnLoad"],
   components: {
-    'dynamic-form': Vue.defineAsyncComponent(() => importComponent('components/core/dynamic-form')),
+    'dynamic-form': Vue.defineAsyncComponent(() => Component.import('components/core/dynamic-form')),
   },
   data() {
     return {

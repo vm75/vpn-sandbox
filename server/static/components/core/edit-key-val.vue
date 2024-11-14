@@ -46,7 +46,7 @@ export default {
   name: "edit-key-val",
   props: ["title", "type", "placeholder", "showOnLoad", "initialKey", "initialValue"],
   components: {
-    'basic-input': Vue.defineAsyncComponent(() => importComponent('components/core/basic-input'))
+    'basic-input': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input'))
   },
   data() {
     return {

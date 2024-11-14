@@ -24,13 +24,12 @@
 </template>
 
 <script>
-
 export default {
   name: "basic-input",
   props: ["type", "value", "placeholder", "options"],
   components: {
-    'binary': Vue.defineAsyncComponent(() => importComponent('components/core/binary')),
-    'toggle': Vue.defineAsyncComponent(() => importComponent('components/core/toggle'))
+    'binary': Vue.defineAsyncComponent(() => Component.import('components/core/binary')),
+    'toggle': Vue.defineAsyncComponent(() => Component.import('components/core/toggle'))
   },
   data() {
     return {

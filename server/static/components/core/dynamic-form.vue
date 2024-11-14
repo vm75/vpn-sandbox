@@ -99,10 +99,10 @@ export default {
   name: "dynamic-form",
   props: ["config", "data"],
   components: {
-    'basic-input': Vue.defineAsyncComponent(() => importComponent('components/core/basic-input')),
-    'enum-input': Vue.defineAsyncComponent(() => importComponent('components/core/enum-input')),
-    'edit-key-val': Vue.defineAsyncComponent(() => importComponent('components/core/edit-key-val')),
-    'edit-item': Vue.defineAsyncComponent(() => importComponent('components/core/edit-item')),
+    'basic-input': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input')),
+    'enum-input': Vue.defineAsyncComponent(() => Component.import('components/core/enum-input')),
+    'edit-key-val': Vue.defineAsyncComponent(() => Component.import('components/core/edit-key-val')),
+    'edit-item': Vue.defineAsyncComponent(() => Component.import('components/core/edit-item')),
   },
   data() {
     return {

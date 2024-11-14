@@ -375,10 +375,10 @@
         }
       },
       components: {
-        'list-editor': Vue.defineAsyncComponent(() => importComponent('components/core/list-editor')),
-        'basic': Vue.defineAsyncComponent(() => importComponent('components/core/basic-input')),
-        'inline-list': Vue.defineAsyncComponent(() => importComponent('components/core/inline-list')),
-        'location-map': Vue.defineAsyncComponent(() => importComponent('components/core/location-map')),
+        'list-editor': Vue.defineAsyncComponent(() => Component.import('components/core/list-editor')),
+        'basic': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input')),
+        'inline-list': Vue.defineAsyncComponent(() => Component.import('components/core/inline-list')),
+        'location-map': Vue.defineAsyncComponent(() => Component.import('components/core/location-map')),
       },
       methods: {
         async reload() {
@@ -409,7 +409,7 @@
           this.openvpn.modified = false;
         },
         editServer: function (index) {
-          injectComponent({
+          Component.inject({
             elementId: "modal",
             name: 'edit-server',
             source: 'components/config/edit-server',
