@@ -24,8 +24,8 @@ type GlobalSettings struct {
 }
 
 var GlobalConfig = GlobalSettings{
-	VPNTypes:      []string{"openvpn", "wireguard"},
-	VPNType:       "openvpn",
+	VPNTypes:      []string{"OpenVPN", "Wireguard"},
+	VPNType:       "OpenVPN",
 	Subnets:       []string{},
 	ProxyUsername: "",
 	ProxyPassword: "",
@@ -70,9 +70,9 @@ func Init(dataDir string, appMode AppMode) error {
 	utils.InitLog(filepath.Join(VarDir, "vpn-sandbox.log"))
 
 	// if pid file exists, and process is still running, return
-	if utils.SignalRunning(ServerPidFile, syscall.SIGCONT) {
-		os.Exit(0)
-	}
+	// if utils.SignalRunning(ServerPidFile, syscall.SIGCONT) {
+	// 	os.Exit(0)
+	// }
 	err = os.WriteFile(ServerPidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
 	if err != nil {
 		return err

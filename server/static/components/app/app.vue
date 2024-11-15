@@ -10,11 +10,11 @@
           <li :class="{ 'is-active': currentTab === 'config' }">
             <a @click="currentTab = 'config'">Sandbox Config</a>
           </li>
-          <li :class="{ 'is-active': currentTab === 'openvpn' }">
-            <a @click="currentTab = 'openvpn'">OpenVPN Servers</a>
+          <li :class="{ 'is-active': currentTab === 'OpenVPN' }">
+            <a @click="currentTab = 'OpenVPN'">OpenVPN Servers</a>
           </li>
-          <li :class="{ 'is-active': currentTab === 'wireguard' }">
-            <a @click="currentTab = 'wireguard'">Wireguard Servers</a>
+          <li :class="{ 'is-active': currentTab === 'Wireguard' }">
+            <a @click="currentTab = 'Wireguard'">Wireguard Servers</a>
           </li>
         </ul>
       </div>
@@ -85,7 +85,7 @@
                       <div class="control select is-fullwidth">
                         <select id="vpn-type" v-model="global.config.vpnType" @change="setModified('global')">
                           <option v-for="vpnType in global.config.vpnTypes" :key="vpnType" :value="vpnType"
-                            :selected="vpnType === 'openvpn'">
+                            :selected="vpnType === 'OpenVPN'">
                             {{ vpnType }}
                           </option>
                         </select>
@@ -93,7 +93,7 @@
                     </div>
                   </div>
                 </div>
-                <div v-if="global.config.vpnType === 'openvpn'">
+                <div v-if="global.config.vpnType === 'OpenVPN'">
                   <div>
                     <div class="divider">VPN Config</div>
                   </div>
@@ -132,7 +132,7 @@
                     </div>
                   </div>
                 </div>
-                <div v-if="global.config.vpnType === 'wireguard'">
+                <div v-if="global.config.vpnType === 'Wireguard'">
                   <div>
                     <div class="divider">VPN Config</div>
                   </div>
@@ -213,13 +213,13 @@
       </div>
 
       <!-- OpenVPN Servers Tab -->
-      <div v-if="currentTab === 'openvpn'" class="box">
+      <div v-if="currentTab === 'OpenVPN'" class="box">
         <openvpn-config v-model:servers="openvpn.servers">
         </openvpn-config>
       </div>
 
       <!-- Wireguard Servers Tab -->
-      <div v-if="currentTab === 'wireguard'" class="box">
+      <div v-if="currentTab === 'Wireguard'" class="box">
         <wireguard-config v-model:servers="wireguard.servers">
         </wireguard-config>
       </div>
@@ -296,8 +296,8 @@ export default {
       global: {
         modified: false,
         config: {
-          vpnType: 'openvpn',
-          vpnTypes: ['openvpn', 'wireguard'],
+          vpnType: 'OpenVPN',
+          vpnTypes: ['OpenVPN', 'Wireguard'],
           subnets: [],
           proxyUsername: '',
           proxyPassword: '',
@@ -317,7 +317,7 @@ export default {
     async reload() {
       var globalConfig = await fetch('/api/config').then(response => response.json());
       Object.assign(this.global.config, {
-        vpnType: globalConfig.vpnType || 'openvpn',
+        vpnType: globalConfig.vpnType || 'OpenVPN',
         subnets: globalConfig.subnets || [],
       })
       this.global.modified = false;
@@ -423,9 +423,6 @@ export default {
   },
   mounted() {
     this.reload();
-    // setInterval(() => {
-    //   this.refreshInfo();
-    // }, 60000);
   }
 }
 </script>

@@ -15,6 +15,7 @@
                 "8082",
                 "--test",
             ],
+            "preLaunchTask": "Delete old binaries"
         }
     ]
 }

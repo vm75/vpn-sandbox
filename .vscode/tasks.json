@@ -5,10 +5,26 @@
             "label": "Build Script",
             "type": "shell",
             "command": "bash",
-            "args": ["./build.sh"],
+            "args": [
+                "./build.sh"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
+            }
+        },
+        {
+            "label": "Delete old binaries",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-f",
+                "${workspaceFolder}/server/__debug_bin*"
+            ],
+            "hide": true,
+            "presentation": {
+                "reveal": "silent",
+                "close": true
             }
         }
     ]

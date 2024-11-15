@@ -56,6 +56,6 @@ VOLUME ["/data"]
 EXPOSE 8080/tcp 1080/tcp 80/tcp
 
 HEALTHCHECK --interval=60s --timeout=15s --start-period=120s \
-    CMD ls /data/var/openvpn.pid
+    CMD netstat -an | grep -c ":::80 "
 
 ENTRYPOINT [ "/opt/vpn-sandbox/vpn-sandbox", "-s" ]
