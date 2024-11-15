@@ -9,13 +9,13 @@
         </header>
         <section class="modal-card-body">
           <div class="field">
-            <label class="label">Config Name</label>
+            <legend class="label">Config Name</legend>
             <div class="control">
               <input class="input" v-model="config.name" placeholder="Config Name" />
             </div>
           </div>
           <div class="field">
-            <label class="label">Config Type</label>
+            <legend class="label">Config Type</legend>
             <div class="control">
               <div class="select">
                 <select v-model="config.templateName">
@@ -36,7 +36,7 @@
 
           <!-- Custom data textarea -->
           <div v-if="config.templateName === 'custom'" class="field">
-            <label class="label">Custom Config Data</label>
+            <legend class="label">Custom Config Data</legend>
             <div class="control">
               <textarea class="textarea" v-model="config.data" placeholder="Custom Config Data"></textarea>
             </div>
@@ -133,5 +133,3 @@ export default {
   }
 }
 </script>
-
-<style></style>

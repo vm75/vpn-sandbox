@@ -10,8 +10,11 @@
           <li :class="{ 'is-active': currentTab === 'config' }">
             <a @click="currentTab = 'config'">Sandbox Config</a>
           </li>
-          <li :class="{ 'is-active': currentTab === 'servers' }">
-            <a @click="currentTab = 'servers'">OpenVPN Servers</a>
+          <li :class="{ 'is-active': currentTab === 'openvpn' }">
+            <a @click="currentTab = 'openvpn'">OpenVPN Servers</a>
+          </li>
+          <li :class="{ 'is-active': currentTab === 'wireguard' }">
+            <a @click="currentTab = 'wireguard'">Wireguard Servers</a>
           </li>
         </ul>
       </div>
@@ -24,7 +27,7 @@
               <form>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label" for="vpn-switch">VPN</label>
+                    <legend class="label">VPN</legend>
                   </div>
                   <div class="field-body">
                     <div class="field control">
@@ -36,7 +39,7 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label" for="http-proxy-switch">Http Proxy</label>
+                    <legend class="label">Http Proxy</legend>
                   </div>
                   <div class="field-body">
                     <div class="field control">
@@ -48,7 +51,7 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label" for="socks-proxy-switch">Socks Proxy</label>
+                    <legend class="label">Socks Proxy</legend>
                   </div>
                   <div class="field-body">
                     <div class="field control">
@@ -63,7 +66,7 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label" for="lan-subnets">LAN Subnets</label>
+                    <legend class="label">LAN Subnets</legend>
                   </div>
                   <div class="field-body">
                     <div class="field control is-fullwidth">
@@ -75,7 +78,7 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
-                    <label class="label" for="vpn-type">VPN Type</label>
+                    <legend class="label">VPN Type</legend>
                   </div>
                   <div class="field-body">
                     <div class="field">
@@ -96,7 +99,7 @@
                   </div>
                   <div class="field is-horizontal">
                     <div class="field-label is-normal">
-                      <label class="label" for="openvpn-provider">OpenVPN Provider</label>
+                      <legend class="label">OpenVPN Provider</legend>
                     </div>
                     <div class="field-body">
                       <div class="field">
@@ -114,7 +117,7 @@
                   </div>
                   <div class="field is-horizontal">
                     <div class="field-label is-normal">
-                      <label class="label" for="openvpn-endpoint">Server Endpoint</label>
+                      <legend class="label">Server Endpoint</legend>
                     </div>
                     <div class="field-body">
                       <div class="field control select is-fullwidth">
@@ -125,6 +128,29 @@
                             {{ endpoint.name }}
                           </option>
                         </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="global.config.vpnType === 'wireguard'">
+                  <div>
+                    <div class="divider">VPN Config</div>
+                  </div>
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <legend class="label">Wireguard Provider</legend>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <div class="control select is-fullwidth">
+                          <select id="wireguard-provider" v-model="wireguard.config.serverName"
+                            @change="setModified('wireguard')">
+                            <option v-for="server in wireguard.servers" :key="server.name" :value="server.name"
+                              :selected="server.name === wireguard.config.serverName">
+                              {{ server.name }}
+                            </option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -186,7 +212,7 @@
                   </div>
 
                   <div class="columns">
-                    <div class="column is-3 has-text-weight-bold">Organization:</div>
+                    <div class="column is-3 has-text-weight-bold">Provider:</div>
                     <div class="column" id="org">{{ ipInfo.org }}</div>
                   </div>
 
@@ -211,10 +237,15 @@
       </div>
 
       <!-- OpenVPN Servers Tab -->
-      <div v-if="currentTab === 'servers'" class="box">
-        <list-editor :name="'OpenVPN Servers'" :list="openvpn.servers" :editItem="editServer" :addItem="editServer"
-          :removeItem="deleteServer" :displayString="serversDisplayString">
-        </list-editor>
+      <div v-if="currentTab === 'openvpn'" class="box">
+        <openvpn-config v-model:servers="openvpn.servers">
+        </openvpn-config>
+      </div>
+
+      <!-- Wireguard Servers Tab -->
+      <div v-if="currentTab === 'wireguard'" class="box">
+        <wireguard-config v-model:servers="wireguard.servers">
+        </wireguard-config>
       </div>
     </div>
   </section>
@@ -265,6 +296,15 @@ export default {
         },
         servers: [],
       },
+      wireguard: {
+        status: false,
+        modified: false,
+        config: {
+          enabled: false,
+          serverName: '',
+        },
+        servers: [],
+      },
       http_proxy: {
         status: false,
         config: {
@@ -294,6 +334,8 @@ export default {
     'basic': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input')),
     'inline-list': Vue.defineAsyncComponent(() => Component.import('components/core/inline-list')),
     'location-map': Vue.defineAsyncComponent(() => Component.import('components/core/location-map')),
+    'openvpn-config': Vue.defineAsyncComponent(() => Component.import('components/app/openvpn-config')),
+    'wireguard-config': Vue.defineAsyncComponent(() => Component.import('components/app/wireguard-config')),
   },
   methods: {
     async reload() {
@@ -312,6 +354,17 @@ export default {
         logLevel: openVPNConfig.logLevel || 3,
         retryInterval: openVPNConfig.retryInterval || 3600,
       })
+      this.openvpn.servers = await fetch('/api/openvpn/servers').then(response => response.json());
+      this.openvpn.modified = false;
+
+      var wireguardConfig = await fetch('/api/wireguard/config').then(response => response.json());
+      Object.assign(this.wireguard.config, {
+        enabled: wireguardConfig.enabled || false,
+        serverName: wireguardConfig.serverName || '',
+      })
+      this.wireguard.servers = await fetch('/api/wireguard/servers').then(response => response.json());
+      this.wireguard.modified = false;
+
       var httpProxyConfig = await fetch('/api/http_proxy/config').then(response => response.json());
       Object.assign(this.http_proxy.config, {
         enabled: httpProxyConfig.enabled || false,
@@ -320,41 +373,6 @@ export default {
       Object.assign(this.socks_proxy.config, {
         enabled: socksProxyConfig.enabled || false,
       })
-      this.openvpn.servers = await fetch('/api/openvpn/servers').then(response => response.json());
-      this.openvpn.modified = false;
-    },
-    editServer: function (index) {
-      Component.inject({
-        elementId: "modal",
-        name: 'edit-server',
-        source: 'components/config/edit-server',
-        data: {
-          server: index !== undefined ? this.openvpn.servers[index] : {},
-          showOnLoad: true
-        },
-        methods: {
-          save: (data) => {
-            fetch('/api/openvpn/servers/save', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(data)
-            }).then(() => {
-              this.reload();
-            });
-          }
-        }
-      });
-    },
-    deleteServer: function (index) {
-      fetch(`/api/openvpn/servers/delete/${this.openvpn.servers[index].name}`, {
-        method: 'DELETE'
-      })
-        .then(() => this.reload());
-    },
-    serversDisplayString: function (server) {
-      return server.name;
     },
     vpnCommand: function (cmd) {
       fetch(`/api/openvpn/${cmd}`, {
@@ -403,7 +421,7 @@ export default {
       } catch (error) {
         // console.log(error);
       }
-    }
+    },
   },
   computed: {
     endpoints: function () {

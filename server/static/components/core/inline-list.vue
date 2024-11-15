@@ -97,4 +97,10 @@ export default {
   outline: none;
   box-shadow: none;
 }
+
+.entries-input:focus-within {
+  border-color: hsl(var(--bulma-input-focus-h), var(--bulma-input-focus-s), var(--bulma-input-focus-l));
+  box-shadow: var(--bulma-input-focus-shadow-size) hsla(var(--bulma-input-focus-h), var(--bulma-input-focus-s), var(--bulma-input-focus-l), var(--bulma-input-focus-shadow-alpha));
+  outline: none;
+}
 </style>

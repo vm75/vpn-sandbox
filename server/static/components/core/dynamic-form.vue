@@ -8,7 +8,7 @@
       <div v-for="(field, index) in fields" :key="index" class="mb-4">
         <div class="field is-horizontal">
           <div class="field-label">
-            <label class="label">{{ field.name }}</label>
+            <legend class="label">{{ field.name }}</legend>
           </div>
           <div class="field-body">
             <div class="field is-small">

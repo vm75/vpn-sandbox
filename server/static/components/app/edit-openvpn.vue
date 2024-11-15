@@ -9,25 +9,27 @@
         </header>
         <section class="modal-card-body">
           <div class="field">
-            <label class="label">OpenVPN Provider</label>
+            <legend class="label">OpenVPN Provider</legend>
             <div class="control">
-              <input class="input" v-model="server.name" placeholder="OpenVPN Provider" :disabled="!nameIsEditable" />
+              <input id="openvpn-provider" class="input" v-model="server.name" placeholder="OpenVPN Provider"
+                :disabled="!nameIsEditable" />
             </div>
           </div>
           <div class="field">
-            <label class="label">Username</label>
+            <legend class="label">Username</legend>
             <div class="control">
-              <input class="input" v-model="server.username" placeholder="Username" />
+              <input id="openvpn-username" class="input" v-model="server.username" placeholder="Username" />
             </div>
           </div>
           <div class="field">
-            <label class="label">Password</label>
+            <legend class="label">Password</legend>
             <div class="control">
-              <input class="input" type="password" v-model="server.password" placeholder="Password" />
+              <input id="openvpn-password" class="input" type="password" v-model="server.password"
+                placeholder="Password" />
             </div>
           </div>
           <div class="field">
-            <label class="label">Endpoints</label>
+            <legend class="label">Endpoints</legend>
             <div class="control vue-bulma-input">
               <table class="table is-fullwidth is-striped">
                 <thead>
@@ -59,9 +61,9 @@
             </div>
           </div>
           <div class="field">
-            <label class="label">ovpn Template</label>
+            <legend class="label">ovpn Template</legend>
             <div class="control">
-              <textarea class="textarea" v-model="server.template" placeholder="ovpn content"
+              <textarea id="openvpn-template" class="textarea" v-model="server.template" placeholder="ovpn content"
                 style="white-space: pre; overflow-x: auto; font-family: 'Courier New', Courier, monospace;"></textarea>
             </div>
           </div>
@@ -77,7 +79,7 @@
 
 <script>
 export default {
-  name: "edit-server",
+  name: "edit-openvpn",
   props: {
     server: {
       type: Object,
@@ -162,8 +164,8 @@ export default {
 }
 
 .vue-bulma-input:focus-within {
-  border-color: #3273dc;
-  box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+  border-color: hsl(var(--bulma-input-focus-h), var(--bulma-input-focus-s), var(--bulma-input-focus-l));
+  box-shadow: var(--bulma-input-focus-shadow-size) hsla(var(--bulma-input-focus-h), var(--bulma-input-focus-s), var(--bulma-input-focus-l), var(--bulma-input-focus-shadow-alpha));
   outline: none;
 }
 </style>

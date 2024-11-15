@@ -9,13 +9,13 @@
         </header>
         <section class="modal-card-body">
           <div class="field">
-            <label class="label">Template Name</label>
+            <legend class="label">Template Name</legend>
             <div class="control">
               <input class="input" v-model="template.name" placeholder="Template Name" />
             </div>
           </div>
           <div class="field">
-            <label class="label">Template Content</label>
+            <legend class="label">Template Content</legend>
             <div class="control">
               <textarea class="textarea" v-model="template.content" placeholder="Template Content"></textarea>
             </div>

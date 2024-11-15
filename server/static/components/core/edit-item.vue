@@ -11,7 +11,7 @@
           <form @submit.prevent>
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">Value</label>
+                <legend class="label">Value</legend>
               </div>
               <div class="field-body">
                 <div class="field">
