@@ -1,5 +1,8 @@
 {
   "editor.detectIndentation": true,
   "editor.formatOnSave": true,
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  }
 }

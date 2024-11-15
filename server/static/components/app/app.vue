@@ -167,34 +167,10 @@
                 <div class="level-left">
                   <h3 class="title is-4">IP Info</h3>
                 </div>
-                <!-- <div class="level-right">
+                <div class="level-right">
                   <div class="buttons">
                     <div class="tooltip">
-                      <button v-if="!openvpn.status" class="button is-small is-success" @click="vpnCommand('start')">
-                        <span class="icon">
-                          <i class="fas fa-play"></i>
-                        </span>
-                      </button>
-                      <span class="tooltip-text">Start OpenVPN Server</span>
-                    </div>
-                    <div class="tooltip">
-                      <button v-if="openvpn.status" class="button is-small is-warning" @click="vpnCommand('stop')">
-                        <span class="icon">
-                          <i class="fas fa-stop"></i>
-                        </span>
-                      </button>
-                      <span class="tooltip-text">Stop OpenVPN Server</span>
-                    </div>
-                    <div class="tooltip">
-                      <button v-if="openvpn.status" class="button is-small is-info" @click="vpnCommand('restart')">
-                        <span class="icon">
-                          <i class="fas fa-redo"></i>
-                        </span>
-                      </button>
-                      <span class="tooltip-text">Restart OpenVPN Server</span>
-                    </div>
-                    <div class="tooltip">
-                      <button v-if="openvpn.status" class="button is-small is-light" @click="refreshInfo">
+                      <button class="button is-small is-light" @click="refreshInfo">
                         <span class="icon">
                           <i class="fas fa-sync-alt"></i>
                         </span>
@@ -202,7 +178,7 @@
                       <span class="tooltip-text">Refresh Status</span>
                     </div>
                   </div>
-                </div> -->
+                </div>
               </div>
               <div v-if="ipInfo">
                 <div class="container">
@@ -373,11 +349,8 @@ export default {
       Object.assign(this.socks_proxy.config, {
         enabled: socksProxyConfig.enabled || false,
       })
-    },
-    vpnCommand: function (cmd) {
-      fetch(`/api/openvpn/${cmd}`, {
-        method: 'POST',
-      });
+
+      this.refreshInfo();
     },
     toggleModule: function (module) {
       if (module === 'vpn') {
@@ -387,6 +360,10 @@ export default {
       var now = this[module].config.enabled ? 'start' : 'stop';
       fetch(`/api/${module}/${cmd}?${now}=true`, {
         method: 'POST',
+      }).then(() => {
+        setTimeout(() => {
+          this.refreshInfo();
+        }, 5000);
       });
     },
     setModified: function (what) {
@@ -400,6 +377,10 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(this.openvpn.config)
+        }).then(() => {
+          setTimeout(() => {
+            this.refreshInfo();
+          }, 5000);
         });
       }
       if (this.global.modified) {
@@ -409,6 +390,10 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(this.global.config)
+        }).then(() => {
+          setTimeout(() => {
+            this.refreshInfo();
+          }, 5000);
         });
       }
     },
@@ -417,6 +402,10 @@ export default {
         fetch('/api/openvpn/status').then(response => response.json()).then(data => {
           this.vpnStatus = data;
           this.ipInfo = data.info;
+        }).then(() => {
+          setTimeout(() => {
+            this.refreshInfo();
+          }, 5000);
         });
       } catch (error) {
         // console.log(error);
@@ -438,10 +427,9 @@ export default {
   },
   mounted() {
     this.reload();
-    this.refreshInfo();
-    setInterval(() => {
-      this.refreshInfo();
-    }, 60000);
+    // setInterval(() => {
+    //   this.refreshInfo();
+    // }, 60000);
   }
 }
 </script>
