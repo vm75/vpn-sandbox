@@ -402,10 +402,6 @@ export default {
         fetch('/api/openvpn/status').then(response => response.json()).then(data => {
           this.vpnStatus = data;
           this.ipInfo = data.info;
-        }).then(() => {
-          setTimeout(() => {
-            this.refreshInfo();
-          }, 5000);
         });
       } catch (error) {
         // console.log(error);
