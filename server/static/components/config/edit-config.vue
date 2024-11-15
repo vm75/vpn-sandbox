@@ -81,7 +81,7 @@ export default {
     }
   },
   components: {
-    'dynamic-form': Vue.defineAsyncComponent(() => Component.import('components/core/dynamic-form')),
+    'dynamic-form': Vue.defineAsyncComponent(() => ComponentLoader.import('core/dynamic-form')),
   },
   data() {
     return {

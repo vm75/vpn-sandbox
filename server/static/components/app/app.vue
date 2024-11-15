@@ -306,12 +306,12 @@ export default {
     }
   },
   components: {
-    'list-editor': Vue.defineAsyncComponent(() => Component.import('components/core/list-editor')),
-    'basic': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input')),
-    'inline-list': Vue.defineAsyncComponent(() => Component.import('components/core/inline-list')),
-    'location-map': Vue.defineAsyncComponent(() => Component.import('components/core/location-map')),
-    'openvpn-config': Vue.defineAsyncComponent(() => Component.import('components/app/openvpn-config')),
-    'wireguard-config': Vue.defineAsyncComponent(() => Component.import('components/app/wireguard-config')),
+    'list-editor': Vue.defineAsyncComponent(() => ComponentLoader.import('core/list-editor')),
+    'basic': Vue.defineAsyncComponent(() => ComponentLoader.import('core/basic-input')),
+    'inline-list': Vue.defineAsyncComponent(() => ComponentLoader.import('core/inline-list')),
+    'location-map': Vue.defineAsyncComponent(() => ComponentLoader.import('core/location-map')),
+    'openvpn-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/openvpn-config')),
+    'wireguard-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/wireguard-config')),
   },
   methods: {
     async reload() {

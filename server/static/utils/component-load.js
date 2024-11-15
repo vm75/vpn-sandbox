@@ -4,10 +4,11 @@
   } else if (typeof module === 'object' && module.exports) {
     module.exports = factory();
   } else {
-    root.Component = factory();
+    root.ComponentLoader = factory();
   }
 }(typeof self !== 'undefined' ? self : this, function () {
 
+  var ComponentsFolder = '';
   var vueModules = {};
   var mountedComponents = {};
 
@@ -164,11 +165,22 @@
     }
   }
 
+  function isAbsoluteUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   // Utility function to download content from a URL, transpose it, create a Blob URL, and import the module
   function importComponent(url) {
+    var isAbsolute = isAbsoluteUrl(url);
     if (!vueModules[url]) {
+      url = isAbsolute ? url : ComponentsFolder + "/" + url;
       if (url.endsWith('.js')) {
-        url = window.location.origin + "/" + url;
+        url = isAbsolute ? url : window.location.origin + "/" + url;
         vueModules[url] = import(url)
       } else {
         if (!url.endsWith('.vue')) {
@@ -180,8 +192,13 @@
     return vueModules[url];
   }
 
+  function setComponentsFolder(folder) {
+    ComponentsFolder = folder;
+  }
+
   // Return an object exposing the API
   return {
+    setComponentsFolder: setComponentsFolder,
     isLoaded: isLoaded,
     inject: injectComponent,
     import: importComponent,

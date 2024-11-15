@@ -108,10 +108,10 @@ export default {
     },
   },
   components: {
-    'basic-input': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input')),
-    'enum-input': Vue.defineAsyncComponent(() => Component.import('components/core/enum-input')),
-    'edit-key-val': Vue.defineAsyncComponent(() => Component.import('components/core/edit-key-val')),
-    'edit-item': Vue.defineAsyncComponent(() => Component.import('components/core/edit-item')),
+    'basic-input': Vue.defineAsyncComponent(() => ComponentLoader.import('core/basic-input')),
+    'enum-input': Vue.defineAsyncComponent(() => ComponentLoader.import('core/enum-input')),
+    'edit-key-val': Vue.defineAsyncComponent(() => ComponentLoader.import('core/edit-key-val')),
+    'edit-item': Vue.defineAsyncComponent(() => ComponentLoader.import('core/edit-item')),
   },
   data() {
     return {

@@ -71,7 +71,7 @@ export default {
     },
   },
   components: {
-    'basic-input': Vue.defineAsyncComponent(() => Component.import('components/core/basic-input'))
+    'basic-input': Vue.defineAsyncComponent(() => ComponentLoader.import('core/basic-input'))
   },
   data() {
     return {

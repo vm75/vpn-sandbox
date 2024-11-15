@@ -20,10 +20,11 @@
   </div>
 
   <script type="module">
-    Component.inject({
+    ComponentLoader.setComponentsFolder('components');
+    ComponentLoader.inject({
       elementId: "app",
       name: 'app',
-      source: 'components/app/app',
+      source: 'app/app',
     })
   </script>
 </body>

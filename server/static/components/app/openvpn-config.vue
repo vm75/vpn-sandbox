@@ -20,14 +20,14 @@ export default {
     }
   },
   components: {
-    'list-editor': Vue.defineAsyncComponent(() => Component.import('components/core/list-editor')),
+    'list-editor': Vue.defineAsyncComponent(() => ComponentLoader.import('core/list-editor')),
   },
   methods: {
     editServer: function (index) {
-      Component.inject({
+      ComponentLoader.inject({
         elementId: "openvpn-config-modal",
         name: 'edit-openvpn',
-        source: 'components/app/edit-openvpn',
+        source: 'app/edit-openvpn',
         data: {
           server: index !== undefined ? this.serverList[index] : {},
           showOnLoad: true

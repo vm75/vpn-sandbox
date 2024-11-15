@@ -20,14 +20,14 @@ export default {
     }
   },
   components: {
-    'list-editor': Vue.defineAsyncComponent(() => Component.import('components/core/list-editor')),
+    'list-editor': Vue.defineAsyncComponent(() => ComponentLoader.import('core/list-editor')),
   },
   methods: {
     editServer: function (index) {
-      Component.inject({
+      ComponentLoader.inject({
         elementId: "wireguard-config-modal",
         name: 'edit-wireguard',
-        source: 'components/app/edit-wireguard',
+        source: 'app/edit-wireguard',
         data: {
           server: index !== undefined ? this.serverList[index] : {},
           showOnLoad: true

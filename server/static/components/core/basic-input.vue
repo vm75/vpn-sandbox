@@ -51,8 +51,8 @@ export default {
     },
   },
   components: {
-    'binary': Vue.defineAsyncComponent(() => Component.import('components/core/binary')),
-    'toggle': Vue.defineAsyncComponent(() => Component.import('components/core/toggle'))
+    'binary': Vue.defineAsyncComponent(() => ComponentLoader.import('core/binary')),
+    'toggle': Vue.defineAsyncComponent(() => ComponentLoader.import('core/toggle'))
   },
   data() {
     return {

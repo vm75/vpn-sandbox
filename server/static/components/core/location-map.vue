@@ -62,9 +62,9 @@ export default {
     const leafletCssUrl = 'https://cdn.jsdelivr.net/npm/leaflet@latest/dist/leaflet.min.css';
     const leafletJsUrl = 'https://cdn.jsdelivr.net/npm/leaflet@latest/dist/leaflet.min.js';
 
-    if (!Component.isLoaded(leafletCssUrl)) {
-      Component.injectStyleUrl(leafletCssUrl);
-      Component.injectScriptUrl(leafletJsUrl, () => {
+    if (!ComponentLoader.isLoaded(leafletCssUrl)) {
+      ComponentLoader.injectStyleUrl(leafletCssUrl);
+      ComponentLoader.injectScriptUrl(leafletJsUrl, () => {
         this.initMap();
       })
     } else {
