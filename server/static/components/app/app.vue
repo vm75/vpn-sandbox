@@ -2,7 +2,11 @@
   <div id="modal"></div>
   <section class="section">
     <div class="container">
-      <h1 class="title">VPN Sandbox</h1>
+      <div class="is-flex is-justify-content-center is-align-items-center">
+        <icon icon="assets/vpn-sandbox.png"></icon>
+
+        <h1 class="title ml-2">VPN Sandbox</h1>
+      </div>
 
       <!-- Tabs -->
       <div class="tabs is-boxed">
@@ -289,12 +293,11 @@ export default {
     'openvpn-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/openvpn-config')),
     'wireguard-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/wireguard-config')),
     'app-status': Vue.defineAsyncComponent(() => ComponentLoader.import('app/app-status')),
+    'icon': Vue.defineAsyncComponent(() => ComponentLoader.import('core/icon')),
   },
   methods: {
     async reload() {
       var status = await fetch('/api/status').then(response => response.json());
-
-      console.log(status);
 
       var globalConfig = status.global.config;
       Object.assign(this.global.config, {
@@ -362,6 +365,21 @@ export default {
           },
           body: JSON.stringify(this.openvpn.config)
         }).then(() => {
+          this.openvpn.modified = false;
+          setTimeout(() => {
+            this.refreshInfo();
+          }, 5000);
+        });
+      }
+      if (this.wireguard.modified) {
+        fetch(`/api/wireguard/config/save`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(this.wireguard.config)
+        }).then(() => {
+          this.wireguard.modified = false;
           setTimeout(() => {
             this.refreshInfo();
           }, 5000);
@@ -375,6 +393,7 @@ export default {
           },
           body: JSON.stringify(this.global.config)
         }).then(() => {
+          this.global.modified = false;
           setTimeout(() => {
             this.refreshInfo();
           }, 5000);
