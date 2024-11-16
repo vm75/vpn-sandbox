@@ -16,6 +16,11 @@ type IpInfo map[string]interface{}
 var staticDir = "./static"
 var ipInfo = IpInfo{}
 
+type ModuleStatus struct {
+	Running bool                   `json:"running"`
+	Info    map[string]interface{} `json:"info"`
+}
+
 func queryParams(r *http.Request) map[string]string {
 	params := make(map[string]string)
 	for k, v := range r.URL.Query() {
@@ -25,6 +30,23 @@ func queryParams(r *http.Request) map[string]string {
 		params[k] = v[0]
 	}
 	return params
+}
+
+func getStatus(w http.ResponseWriter, r *http.Request) {
+	globalConfig, _ := core.GetGlobalConfig()
+	status := make(map[string]interface{})
+	status["global"] = map[string]interface{}{
+		"config": globalConfig,
+	}
+
+	for name, module := range core.GetModules() {
+		moduleStatus := make(map[string]interface{})
+		moduleStatus["running"] = module.IsRunning()
+		moduleStatus["config"], _ = module.GetConfig(nil)
+		status[name] = moduleStatus
+	}
+
+	json.NewEncoder(w).Encode(status)
 }
 
 func getGlobalConfig(w http.ResponseWriter, r *http.Request) {
@@ -56,8 +78,11 @@ func getModuleStatus(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	module := vars["module"]
 
-	status, err := core.GetModuleStatus(module)
-	status.Info = ipInfo
+	isRunning, err := core.GetModuleStatus(module)
+	status := ModuleStatus{
+		Running: isRunning,
+		Info:    ipInfo,
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -86,30 +111,6 @@ func disableModule(w http.ResponseWriter, r *http.Request) {
 	stopNow := r.URL.Query().Get("stop") == "true"
 
 	err := core.DisableModule(module, stopNow)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-// Start Module
-func startModule(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	module := vars["module"]
-
-	err := core.StartModule(module)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-// Stop Module
-func stopModule(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	module := vars["module"]
-
-	err := core.StopModule(module)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -181,6 +182,7 @@ func WebServer(port string) {
 	r := mux.NewRouter()
 
 	// Config-related routes
+	r.HandleFunc("/api/status", getStatus).Methods("GET")
 	r.HandleFunc("/api/config", getGlobalConfig).Methods("GET")
 	r.HandleFunc("/api/config/save", saveGlobalConfig).Methods("POST")
 
@@ -188,8 +190,6 @@ func WebServer(port string) {
 	r.HandleFunc("/api/{module}/status", getModuleStatus).Methods("GET")
 	r.HandleFunc("/api/{module}/enable", enableModule).Methods("POST")
 	r.HandleFunc("/api/{module}/disable", disableModule).Methods("POST")
-	r.HandleFunc("/api/{module}/start", startModule).Methods("POST")
-	r.HandleFunc("/api/{module}/stop", stopModule).Methods("POST")
 	r.HandleFunc("/api/{module}/restart", restartModule).Methods("POST")
 	r.HandleFunc("/api/{module}/config", getModuleConfig).Methods("GET")
 	r.HandleFunc("/api/{module}/config/save", saveModuleConfig).Methods("POST")

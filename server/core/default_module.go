@@ -21,8 +21,8 @@ func (d *DefaultModule) LoadConfig() {
 
 func (d *DefaultModule) RegisterRoutes(r *mux.Router) {}
 
-func (d *DefaultModule) GetStatus() (ModuleStatus, error) {
-	return ModuleStatus{}, nil
+func (d *DefaultModule) IsRunning() bool {
+	return false
 }
 
 func (d *DefaultModule) Enable(startNow bool) error {
@@ -33,14 +33,6 @@ func (d *DefaultModule) Enable(startNow bool) error {
 func (d *DefaultModule) Disable(stopNow bool) error {
 	d.Config["enabled"] = false
 	return SaveConfig(d.Name, d.Config)
-}
-
-func (d *DefaultModule) Start() error {
-	return nil
-}
-
-func (d *DefaultModule) Stop() error {
-	return nil
 }
 
 func (d *DefaultModule) Restart() error {

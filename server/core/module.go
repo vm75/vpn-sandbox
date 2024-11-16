@@ -7,18 +7,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ModuleStatus struct {
-	Running bool                   `json:"running"`
-	Info    map[string]interface{} `json:"info"`
-}
-
 type Module interface {
 	RegisterRoutes(r *mux.Router)
-	GetStatus() (ModuleStatus, error)
+	IsRunning() bool
 	Enable(startNow bool) error
 	Disable(stopNow bool) error
-	Start() error
-	Stop() error
 	Restart() error
 	GetConfig(params map[string]string) (map[string]interface{}, error)
 	SaveConfig(params map[string]string, config map[string]interface{}) error
@@ -33,12 +26,12 @@ func RegisterModule(name string, module Module) {
 	modules[name] = module
 }
 
-func GetModules() []Module {
+func GetModules() map[string]Module {
 	modulesMutex.RLock()
 	defer modulesMutex.RUnlock()
-	var moduleList []Module
-	for _, module := range modules {
-		moduleList = append(moduleList, module)
+	var moduleList = map[string]Module{}
+	for name, module := range modules {
+		moduleList[name] = module
 	}
 	return moduleList
 }
@@ -49,13 +42,13 @@ func GetModule(name string) Module {
 	return modules[name]
 }
 
-func GetModuleStatus(name string) (ModuleStatus, error) {
+func GetModuleStatus(name string) (bool, error) {
 	modulesMutex.RLock()
 	defer modulesMutex.RUnlock()
 	if module, exists := modules[name]; exists {
-		return module.GetStatus()
+		return module.IsRunning(), nil
 	}
-	return ModuleStatus{}, fmt.Errorf("module %s not found", name)
+	return false, fmt.Errorf("module %s not found", name)
 }
 
 func EnableModule(name string, startNow bool) error {
@@ -72,24 +65,6 @@ func DisableModule(name string, stopNow bool) error {
 	defer modulesMutex.RUnlock()
 	if module, exists := modules[name]; exists {
 		return module.Disable(stopNow)
-	}
-	return fmt.Errorf("module %s not found", name)
-}
-
-func StartModule(name string) error {
-	modulesMutex.RLock()
-	defer modulesMutex.RUnlock()
-	if module, exists := modules[name]; exists {
-		return module.Start()
-	}
-	return fmt.Errorf("module %s not found", name)
-}
-
-func StopModule(name string) error {
-	modulesMutex.RLock()
-	defer modulesMutex.RUnlock()
-	if module, exists := modules[name]; exists {
-		return module.Stop()
 	}
 	return fmt.Errorf("module %s not found", name)
 }

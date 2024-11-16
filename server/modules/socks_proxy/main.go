@@ -7,6 +7,8 @@ import (
 	"vpn-sandbox/utils"
 )
 
+const ModuleName = "socks_proxy"
+
 type HttpProxyModule struct {
 	core.DefaultModule
 }
@@ -17,7 +19,7 @@ var configFile = ""
 func InitModule() {
 	var module = HttpProxyModule{
 		DefaultModule: core.DefaultModule{
-			Name: "socks_proxy",
+			Name: ModuleName,
 		},
 	}
 
@@ -38,9 +40,9 @@ func InitModule() {
 	pidFile = filepath.Join(core.VarDir, "sockd.pid")
 }
 
-// GetStatus implements core.Module.
-func (h *HttpProxyModule) GetStatus() (core.ModuleStatus, error) {
-	return core.ModuleStatus{Running: utils.IsRunning(proxyCmd)}, nil
+// IsRunning implements core.Module.
+func (h *HttpProxyModule) IsRunning() bool {
+	return utils.IsRunning(proxyCmd)
 }
 
 // HandleEvent implements utils.EventListener.

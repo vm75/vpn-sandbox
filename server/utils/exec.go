@@ -27,7 +27,7 @@ func RunCommand(command string, args ...string) error {
 }
 
 func IsRunning(cmd *exec.Cmd) bool {
-	return cmd != nil && cmd.Process != nil && cmd.ProcessState != nil && !cmd.ProcessState.Exited()
+	return cmd != nil && cmd.Process != nil && (cmd.ProcessState == nil || !cmd.ProcessState.Exited())
 }
 
 func SignalCmd(cmd *exec.Cmd, signal os.Signal) {

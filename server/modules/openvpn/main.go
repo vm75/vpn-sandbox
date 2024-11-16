@@ -8,6 +8,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const ModuleName = "openvpn"
+
 type OpenVPNModule struct {
 	Enabled        bool   `json:"enabled"`
 	ServerName     string `json:"serverName"`
@@ -38,15 +40,15 @@ func InitModule() {
 	logFile = filepath.Join(core.VarDir, "openvpn.log")
 	statusFile = filepath.Join(core.VarDir, "openvpn.status")
 
-	savedConfig, err := core.GetConfig("openvpn")
+	savedConfig, err := core.GetConfig(ModuleName)
 	if err == nil {
 		utils.MapToObject(savedConfig, &openvpnConfig)
 	} else {
 		utils.ObjectToMap(openvpnConfig, &savedConfig)
-		core.SaveConfig("openvpn", savedConfig)
+		core.SaveConfig(ModuleName, savedConfig)
 	}
 
-	core.RegisterModule("openvpn", &openvpnConfig)
+	core.RegisterModule(ModuleName, &openvpnConfig)
 
 	if openvpnConfig.Enabled {
 		go runOpenVPN()
@@ -62,12 +64,9 @@ func (o *OpenVPNModule) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/openvpn/servers/delete/{name}", deleteServer).Methods("DELETE")
 }
 
-// GetStatus implements core.Module.
-func (o *OpenVPNModule) GetStatus() (core.ModuleStatus, error) {
-	if utils.IsRunning(openvpnCmd) {
-		return core.ModuleStatus{Running: true}, nil
-	}
-	return core.ModuleStatus{Running: false}, nil
+// IsRunning implements core.Module.
+func (o *OpenVPNModule) IsRunning() bool {
+	return utils.IsRunning(openvpnCmd)
 }
 
 // Enable implements core.Module.
@@ -75,7 +74,7 @@ func (o *OpenVPNModule) Enable(startNow bool) error {
 	o.Enabled = true
 	config := map[string]interface{}{}
 	utils.ObjectToMap(o, &config)
-	core.SaveConfig("openvpn", config)
+	core.SaveConfig(ModuleName, config)
 	if startNow {
 		go runOpenVPN()
 	}
@@ -87,28 +86,8 @@ func (o *OpenVPNModule) Disable(stopNow bool) error {
 	o.Enabled = false
 	config := map[string]interface{}{}
 	utils.ObjectToMap(o, &config)
-	core.SaveConfig("openvpn", config)
+	core.SaveConfig(ModuleName, config)
 	if stopNow {
-		killOpenVPN()
-	}
-	return nil
-}
-
-// Start implements core.Module.
-func (o *OpenVPNModule) Start() error {
-	if o.Enabled {
-		go runOpenVPN()
-	} else {
-		o.Enable(true)
-	}
-	return nil
-}
-
-// Stop implements core.Module.
-func (o *OpenVPNModule) Stop() error {
-	if o.Enabled {
-		o.Disable(true)
-	} else {
 		killOpenVPN()
 	}
 	return nil
@@ -124,6 +103,7 @@ func (o *OpenVPNModule) Restart() error {
 func (o *OpenVPNModule) GetConfig(params map[string]string) (map[string]interface{}, error) {
 	var config map[string]interface{}
 	utils.ObjectToMap(openvpnConfig, &config)
+	config["servers"] = getOpenVPNServers()
 	return config, nil
 }
 
@@ -133,7 +113,7 @@ func (o *OpenVPNModule) SaveConfig(params map[string]string, config map[string]i
 		return nil
 	}
 	utils.MapToObject(config, o)
-	err := core.SaveConfig("openvpn", config)
+	err := core.SaveConfig(ModuleName, config)
 	if err != nil {
 		return err
 	}

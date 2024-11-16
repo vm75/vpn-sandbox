@@ -7,6 +7,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const ModuleName = "wireguard"
+
 type WireguardModule struct {
 	Enabled    bool   `json:"enabled"`
 	ServerName string `json:"serverName"`
@@ -20,15 +22,15 @@ var wireguardConfig = WireguardModule{
 func InitModule() {
 	initDb()
 
-	savedConfig, err := core.GetConfig("wireguard")
+	savedConfig, err := core.GetConfig(ModuleName)
 	if err == nil {
 		utils.MapToObject(savedConfig, &wireguardConfig)
 	} else {
 		utils.ObjectToMap(wireguardConfig, &savedConfig)
-		core.SaveConfig("wireguard", savedConfig)
+		core.SaveConfig(ModuleName, savedConfig)
 	}
 
-	core.RegisterModule("wireguard", &wireguardConfig)
+	core.RegisterModule(ModuleName, &wireguardConfig)
 
 	if wireguardConfig.Enabled {
 		tunnelUp()
@@ -44,12 +46,9 @@ func (w *WireguardModule) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/wireguard/servers/delete/{name}", deleteServer).Methods("DELETE")
 }
 
-// GetStatus implements core.Module.
-func (w *WireguardModule) GetStatus() (core.ModuleStatus, error) {
-	if isTunnelUp() {
-		return core.ModuleStatus{Running: true}, nil
-	}
-	return core.ModuleStatus{Running: false}, nil
+// IsRunning implements core.Module.
+func (w *WireguardModule) IsRunning() bool {
+	return isTunnelUp()
 }
 
 // Enable implements core.Module.
@@ -57,7 +56,7 @@ func (w *WireguardModule) Enable(startNow bool) error {
 	w.Enabled = true
 	config := map[string]interface{}{}
 	utils.ObjectToMap(w, &config)
-	core.SaveConfig("wireguard", config)
+	core.SaveConfig(ModuleName, config)
 	if startNow {
 		tunnelUp()
 	}
@@ -69,28 +68,8 @@ func (w *WireguardModule) Disable(stopNow bool) error {
 	w.Enabled = false
 	config := map[string]interface{}{}
 	utils.ObjectToMap(w, &config)
-	core.SaveConfig("wireguard", config)
+	core.SaveConfig(ModuleName, config)
 	if stopNow {
-		tunnelDown()
-	}
-	return nil
-}
-
-// Start implements core.Module.
-func (w *WireguardModule) Start() error {
-	if w.Enabled {
-		tunnelUp()
-	} else {
-		w.Enable(true)
-	}
-	return nil
-}
-
-// Stop implements core.Module.
-func (w *WireguardModule) Stop() error {
-	if w.Enabled {
-		w.Disable(true)
-	} else {
 		tunnelDown()
 	}
 	return nil
@@ -107,6 +86,7 @@ func (w *WireguardModule) Restart() error {
 func (w *WireguardModule) GetConfig(params map[string]string) (map[string]interface{}, error) {
 	var config map[string]interface{}
 	utils.ObjectToMap(wireguardConfig, &config)
+	config["servers"] = getWireguardServers()
 	return config, nil
 }
 
@@ -116,7 +96,7 @@ func (w *WireguardModule) SaveConfig(params map[string]string, config map[string
 		return nil
 	}
 	utils.MapToObject(config, w)
-	err := core.SaveConfig("wireguard", config)
+	err := core.SaveConfig(ModuleName, config)
 	if err != nil {
 		return err
 	}

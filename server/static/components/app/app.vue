@@ -25,42 +25,18 @@
           <div class="container column">
             <div class="container box" style="height: 100%;">
               <form>
-                <div class="field is-horizontal">
-                  <div class="field-label is-normal">
-                    <legend class="label">VPN</legend>
-                  </div>
-                  <div class="field-body">
-                    <div class="field control">
-                      <basic id="vpn-switch" type="switch" v-model:value="openvpn.config.enabled"
-                        @update:value="toggleModule('vpn')">
-                      </basic>
-                    </div>
-                  </div>
-                </div>
-                <div class="field is-horizontal">
-                  <div class="field-label is-normal">
-                    <legend class="label">Http Proxy</legend>
-                  </div>
-                  <div class="field-body">
-                    <div class="field control">
-                      <basic id="http-proxy-switch" type="switch" v-model:value="http_proxy.config.enabled"
-                        @update:value="toggleModule('http_proxy')">
-                      </basic>
-                    </div>
-                  </div>
-                </div>
-                <div class="field is-horizontal">
-                  <div class="field-label is-normal">
-                    <legend class="label">Socks Proxy</legend>
-                  </div>
-                  <div class="field-body">
-                    <div class="field control">
-                      <basic id="socks-proxy-switch" type="switch" v-model:value="socks_proxy.config.enabled"
-                        @update:value="toggleModule('socks_proxy')">
-                      </basic>
-                    </div>
-                  </div>
-                </div>
+                <app-status v-if="global.config.vpnType === 'OpenVPN'" name="openvpn" displayName="VPN"
+                  v-model:config="openvpn.config" @toggleModule="toggleModule">
+                </app-status>
+                <app-status v-if="global.config.vpnType === 'Wireguard'" name="wireguard" displayName="VPN"
+                  v-model:config="wireguard.config" @toggleModule="toggleModule">
+                </app-status>
+                <app-status name="http_proxy" displayName="Http Proxy" v-model:config="http_proxy.config"
+                  @toggleModule="toggleModule">
+                </app-status>
+                <app-status name="socks_proxy" displayName="Socks Proxy" v-model:config="socks_proxy.config"
+                  @toggleModule="toggleModule">
+                </app-status>
                 <div>
                   <div class="divider">Common Config</div>
                 </div>
@@ -261,7 +237,7 @@ export default {
       currentTab: 'config',
       ipInfo: null,
       openvpn: {
-        status: false,
+        running: false,
         modified: false,
         config: {
           enabled: false,
@@ -273,7 +249,7 @@ export default {
         servers: [],
       },
       wireguard: {
-        status: false,
+        running: false,
         modified: false,
         config: {
           enabled: false,
@@ -282,13 +258,13 @@ export default {
         servers: [],
       },
       http_proxy: {
-        status: false,
+        running: false,
         config: {
           enabled: false,
         }
       },
       socks_proxy: {
-        status: false,
+        running: false,
         config: {
           enabled: false,
         }
@@ -312,50 +288,58 @@ export default {
     'location-map': Vue.defineAsyncComponent(() => ComponentLoader.import('core/location-map')),
     'openvpn-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/openvpn-config')),
     'wireguard-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/wireguard-config')),
+    'app-status': Vue.defineAsyncComponent(() => ComponentLoader.import('app/app-status')),
   },
   methods: {
     async reload() {
-      var globalConfig = await fetch('/api/config').then(response => response.json());
+      var status = await fetch('/api/status').then(response => response.json());
+
+      console.log(status);
+
+      var globalConfig = status.global.config;
       Object.assign(this.global.config, {
         vpnType: globalConfig.vpnType || 'OpenVPN',
         subnets: globalConfig.subnets || [],
-      })
+      });
       this.global.modified = false;
 
-      var openVPNConfig = await fetch('/api/openvpn/config').then(response => response.json());
+      var openVPNConfig = status.openvpn.config;
       Object.assign(this.openvpn.config, {
+        running: status.openvpn.running || false,
         enabled: openVPNConfig.enabled || false,
         serverName: openVPNConfig.serverName || '',
         serverEndpoint: openVPNConfig.serverEndpoint || '',
         logLevel: openVPNConfig.logLevel || 3,
         retryInterval: openVPNConfig.retryInterval || 3600,
-      })
-      this.openvpn.servers = await fetch('/api/openvpn/servers').then(response => response.json());
+      });
+      this.openvpn["servers"] = openVPNConfig.servers || [];
       this.openvpn.modified = false;
 
-      var wireguardConfig = await fetch('/api/wireguard/config').then(response => response.json());
+      var wireguardConfig = status.wireguard.config;
       Object.assign(this.wireguard.config, {
+        running: status.wireguard.running || false,
         enabled: wireguardConfig.enabled || false,
         serverName: wireguardConfig.serverName || '',
-      })
-      this.wireguard.servers = await fetch('/api/wireguard/servers').then(response => response.json());
+      });
+      this.wireguard["servers"] = wireguardConfig.servers || [];
       this.wireguard.modified = false;
 
-      var httpProxyConfig = await fetch('/api/http_proxy/config').then(response => response.json());
+      var httpProxyConfig = status.http_proxy.config;
       Object.assign(this.http_proxy.config, {
+        running: status.http_proxy.running || false,
         enabled: httpProxyConfig.enabled || false,
-      })
-      var socksProxyConfig = await fetch('/api/socks_proxy/config').then(response => response.json());
+      });
+
+      var socksProxyConfig = status.socks_proxy.config;
       Object.assign(this.socks_proxy.config, {
+        running: status.socks_proxy.running || false,
         enabled: socksProxyConfig.enabled || false,
-      })
+      });
 
       this.refreshInfo();
     },
     toggleModule: function (module) {
-      if (module === 'vpn') {
-        module = 'openvpn';
-      }
+      this[module].config.enabled = !this[module].config.enabled;
       var cmd = this[module].config.enabled ? 'enable' : 'disable';
       var now = this[module].config.enabled ? 'start' : 'stop';
       fetch(`/api/${module}/${cmd}?${now}=true`, {
@@ -409,6 +393,22 @@ export default {
     },
   },
   computed: {
+    vpnEnabled: function () {
+      if (this.global.config.vpnType === 'OpenVPN') {
+        return this.openvpn.config.enabled;
+      } else if (this.global.config.vpnType === 'Wireguard') {
+        return this.wireguard.config.enabled;
+      }
+      return false;
+    },
+    vpnRunning: function () {
+      if (this.global.config.vpnType === 'OpenVPN') {
+        return this.openvpn.config.running;
+      } else if (this.global.config.vpnType === 'Wireguard') {
+        return this.wireguard.config.running;
+      }
+      return false;
+    },
     endpoints: function () {
       for (const server of this.openvpn.servers) {
         if (server.name === this.openvpn.config.serverName) {
