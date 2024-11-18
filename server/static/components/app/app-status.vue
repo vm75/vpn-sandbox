@@ -7,7 +7,7 @@
       <div class="field is-flex is-justify-content-space-around is-align-items-center">
         <!-- Switch -->
         <div class="control">
-          <basic :id="name + '-enabled'" type="switch" v-model:value="enabled"
+          <basic :id="name + '-enabled'" type="switch" v-model:value="isEnabled"
             @update:value="$emit('toggleModule', name)">
           </basic>
         </div>
@@ -47,6 +47,12 @@ export default {
   data() {
     return {
       mainIcon: 'assets/' + this.name + '.svg',
+      isEnabled: this.enabled,
+    }
+  },
+  watch: {
+    enabled(value) {
+      this.isEnabled = value;
     }
   },
   components: {

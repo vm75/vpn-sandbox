@@ -29,11 +29,11 @@
           <div class="container column">
             <div class="container box" style="height: 100%;">
               <form>
-                <app-status v-if="global.config.vpnType === 'OpenVPN'" name="openvpn" displayName="VPN"
+                <app-status v-if="global.vpnType === 'OpenVPN'" name="openvpn" displayName="VPN"
                   v-model:enabled="openvpn.config.enabled" v-model:running="openvpn.running"
                   @toggleModule="toggleModule">
                 </app-status>
-                <app-status v-if="global.config.vpnType === 'Wireguard'" name="wireguard" displayName="VPN"
+                <app-status v-if="global.vpnType === 'Wireguard'" name="wireguard" displayName="VPN"
                   v-model:enabled="wireguard.config.enabled" v-model:running="wireguard.running"
                   @toggleModule="toggleModule">
                 </app-status>
@@ -244,6 +244,7 @@ export default {
       currentTab: 'config',
       global: {
         modified: false,
+        vpnType: 'OpenVPN',
         config: {
           vpnType: 'OpenVPN',
           vpnTypes: ['OpenVPN', 'Wireguard'],
@@ -305,6 +306,7 @@ export default {
       // console.log(status);
 
       this.global.config = status.global.config;
+      this.global.vpnType = status.global.config.vpnType;
       this.global.modified = false;
 
       this.openvpn.running = status.openvpn.running;
@@ -359,49 +361,37 @@ export default {
           break;
       }
     },
-    saveConfig: function (module) {
-      if (this.openvpn.modified) {
-        fetch(`/api/openvpn/config/save`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(this.openvpn.config)
-        }).then(() => {
-          this.openvpn.modified = false;
-          setTimeout(() => {
-            this.refreshInfo();
-          }, 5000);
-        });
+    saveConfig: async function () {
+      var configTypes = ['global', 'openvpn', 'wireguard'];
+
+      for (var configType of configTypes) {
+        if (this[configType].modified) {
+          await fetch(`/api/${configType === 'global' ? '' : (configType + '/')}config/save`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(this[configType].config)
+          });
+          this[configType].modified = false;
+        }
       }
-      if (this.wireguard.modified) {
-        fetch(`/api/wireguard/config/save`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(this.wireguard.config)
-        }).then(() => {
-          this.wireguard.modified = false;
-          setTimeout(() => {
-            this.refreshInfo();
-          }, 5000);
-        });
+      if (this.global.vpnType !== this.global.config.vpnType) {
+        var orgType = this.global.vpnType.toLowerCase();
+        var newType = this.global.config.vpnType.toLowerCase();
+        var vpnEnabled = this[orgType].config.enabled;
+        if (vpnEnabled) {
+          await fetch(`/api/${orgType}/disable?stop=true`, {
+            method: 'POST',
+          });
+          await fetch(`/api/${newType}/enable?start=true`, {
+            method: 'POST',
+          });
+        }
       }
-      if (this.global.modified) {
-        fetch(`/api/config/save`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(this.global.config)
-        }).then(() => {
-          this.global.modified = false;
-          setTimeout(() => {
-            this.refreshInfo();
-          }, 5000);
-        });
-      }
+      setTimeout(() => {
+        this.refreshInfo();
+      }, 5000);
     },
   },
   computed: {
