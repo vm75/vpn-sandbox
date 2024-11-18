@@ -65,6 +65,7 @@
 </template>
 
 <script>
+// Edit Wireguard Component
 export default {
   name: "edit-wireguard",
   props: {

@@ -42,6 +42,7 @@
 </template>
 
 <script>
+// Key-Value Input Component
 export default {
   name: "edit-key-val",
   props: {

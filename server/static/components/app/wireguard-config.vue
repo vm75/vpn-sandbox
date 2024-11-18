@@ -6,6 +6,7 @@
 </template>
 
 <script>
+// Wireguard Config Component
 export default {
   name: 'wireguard-config',
   props: {

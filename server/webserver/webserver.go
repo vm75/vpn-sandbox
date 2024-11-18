@@ -46,6 +46,8 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		status[name] = moduleStatus
 	}
 
+	status["ipInfo"] = ipInfo
+
 	json.NewEncoder(w).Encode(status)
 }
 

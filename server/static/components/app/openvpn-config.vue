@@ -6,6 +6,7 @@
 </template>
 
 <script>
+// OpenVPN Config Component
 export default {
   name: 'openvpn-config',
   props: {

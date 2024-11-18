@@ -6,6 +6,7 @@
 </template>
 
 <script>
+// Location Map Component
 export default {
   name: 'location-map',
   props: {

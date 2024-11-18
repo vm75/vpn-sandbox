@@ -8,6 +8,7 @@
 </template>
 
 <script>
+// Binary Input Component
 export default {
   name: 'binary',
   props: {

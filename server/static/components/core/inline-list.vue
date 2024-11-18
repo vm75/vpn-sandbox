@@ -10,6 +10,7 @@
 </template>
 
 <script>
+// Inline List Component
 export default {
   name: "inline-list",
   props: {

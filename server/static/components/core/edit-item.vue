@@ -32,6 +32,7 @@
 </template>
 
 <script>
+// Edit Item Component
 export default {
   name: "edit-item",
   props: {

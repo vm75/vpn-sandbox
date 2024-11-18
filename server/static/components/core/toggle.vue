@@ -9,6 +9,7 @@
 </template>
 
 <script>
+// Toggle Input Component
 export default {
   name: 'toggle',
   props: {

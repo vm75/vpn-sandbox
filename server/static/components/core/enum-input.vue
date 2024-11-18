@@ -9,6 +9,7 @@
 </template>
 
 <script>
+// Enum Input Component
 export default {
   name: 'enum-input',
   props: {

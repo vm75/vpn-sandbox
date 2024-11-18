@@ -78,6 +78,7 @@
 </template>
 
 <script>
+// Edit OpenVPN Component
 export default {
   name: "edit-openvpn",
   props: {

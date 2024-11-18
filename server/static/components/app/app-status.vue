@@ -7,13 +7,13 @@
       <div class="field is-flex is-justify-content-space-around is-align-items-center">
         <!-- Switch -->
         <div class="control">
-          <basic :id="name + '-enabled'" type="switch" v-model:value="isEnabled"
+          <basic :id="name + '-enabled'" type="switch" v-model:value="enabled"
             @update:value="$emit('toggleModule', name)">
           </basic>
         </div>
         <!-- Icon with Status Banner -->
         <div class="control">
-          <icon v-if="isRunning" :icon="mainIcon" banner="assets/locked.svg"></icon>
+          <icon v-if="running" :icon="mainIcon" banner="assets/locked.svg"></icon>
           <icon v-else :icon="mainIcon" banner="assets/unlocked.svg"></icon>
         </div>
       </div>
@@ -22,7 +22,9 @@
 </template>
 
 <script>
+// App Status Component
 export default {
+  name: 'app-status',
   props: {
     name: {
       type: String,
@@ -32,16 +34,18 @@ export default {
       type: String,
       required: true
     },
-    config: {
-      type: Object,
+    enabled: {
+      type: Boolean,
       required: true
-    }
+    },
+    running: {
+      type: Boolean,
+      required: true
+    },
   },
   emits: ['toggleModule'],
   data() {
     return {
-      isEnabled: this.config.enabled,
-      isRunning: this.config.running,
       mainIcon: 'assets/' + this.name + '.svg',
     }
   },
@@ -49,12 +53,6 @@ export default {
     'icon': Vue.defineAsyncComponent(() => ComponentLoader.import('core/icon')),
     'basic': Vue.defineAsyncComponent(() => ComponentLoader.import('core/basic-input')),
   },
-  watch: {
-    config(newConfig) {
-      this.isEnabled = newConfig.enabled;
-      this.isRunning = newConfig.running;
-    }
-  }
 }
 </script>
 

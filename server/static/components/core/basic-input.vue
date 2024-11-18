@@ -26,6 +26,7 @@
 </template>
 
 <script>
+// Basic Input Component
 export default {
   name: 'basic-input',
   props: {

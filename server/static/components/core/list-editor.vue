@@ -26,6 +26,7 @@
 </template>
 
 <script>
+// List Editor Component
 export default {
   name: "list-editor",
   props: {

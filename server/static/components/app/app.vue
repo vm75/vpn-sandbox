@@ -30,16 +30,18 @@
             <div class="container box" style="height: 100%;">
               <form>
                 <app-status v-if="global.config.vpnType === 'OpenVPN'" name="openvpn" displayName="VPN"
-                  v-model:config="openvpn.config" @toggleModule="toggleModule">
+                  v-model:enabled="openvpn.config.enabled" v-model:running="openvpn.running"
+                  @toggleModule="toggleModule">
                 </app-status>
                 <app-status v-if="global.config.vpnType === 'Wireguard'" name="wireguard" displayName="VPN"
-                  v-model:config="wireguard.config" @toggleModule="toggleModule">
-                </app-status>
-                <app-status name="http_proxy" displayName="Http Proxy" v-model:config="http_proxy.config"
+                  v-model:enabled="wireguard.config.enabled" v-model:running="wireguard.running"
                   @toggleModule="toggleModule">
                 </app-status>
-                <app-status name="socks_proxy" displayName="Socks Proxy" v-model:config="socks_proxy.config"
-                  @toggleModule="toggleModule">
+                <app-status name="http_proxy" displayName="Http Proxy" v-model:enabled="http_proxy.config.enabled"
+                  v-model:running="http_proxy.running" @toggleModule="toggleModule">
+                </app-status>
+                <app-status name="socks_proxy" displayName="Socks Proxy" v-model:enabled="socks_proxy.config.enabled"
+                  v-model:running="socks_proxy.running" @toggleModule="toggleModule">
                 </app-status>
                 <div>
                   <div class="divider">Common Config</div>
@@ -51,7 +53,7 @@
                   <div class="field-body">
                     <div class="field control is-fullwidth">
                       <inline-list id="lan-subnets" :name="'Subnet'" v-model:entries="global.config.subnets"
-                        type="subnet" @update:entries="setModified('global')">
+                        type="subnet" @update:entries="setModified">
                       </inline-list>
                     </div>
                   </div>
@@ -63,7 +65,7 @@
                   <div class="field-body">
                     <div class="field">
                       <div class="control select is-fullwidth">
-                        <select id="vpn-type" v-model="global.config.vpnType" @change="setModified('global')">
+                        <select id="vpn-type" v-model="global.config.vpnType" @change="setModified">
                           <option v-for="vpnType in global.config.vpnTypes" :key="vpnType" :value="vpnType"
                             :selected="vpnType === 'OpenVPN'">
                             {{ vpnType }}
@@ -84,8 +86,7 @@
                     <div class="field-body">
                       <div class="field">
                         <div class="control select is-fullwidth">
-                          <select id="openvpn-provider" v-model="openvpn.config.serverName"
-                            @change="setModified('openvpn')">
+                          <select id="openvpn-provider" v-model="openvpn.config.serverName" @change="setModified">
                             <option v-for="server in openvpn.servers" :key="server.name" :value="server.name"
                               :selected="server.name === openvpn.config.serverName">
                               {{ server.name }}
@@ -101,8 +102,7 @@
                     </div>
                     <div class="field-body">
                       <div class="field control select is-fullwidth">
-                        <select id="openvpn-endpoint" v-model="openvpn.config.serverEndpoint"
-                          @change="setModified('openvpn')">
+                        <select id="openvpn-endpoint" v-model="openvpn.config.serverEndpoint" @change="setModified">
                           <option v-for="endpoint in endpoints" :key="endpoint.name" :value="endpoint.name"
                             :selected="endpoint.name === openvpn.config.serverEndpoint">
                             {{ endpoint.name }}
@@ -123,8 +123,7 @@
                     <div class="field-body">
                       <div class="field">
                         <div class="control select is-fullwidth">
-                          <select id="wireguard-provider" v-model="wireguard.config.serverName"
-                            @change="setModified('wireguard')">
+                          <select id="wireguard-provider" v-model="wireguard.config.serverName" @change="setModified">
                             <option v-for="server in wireguard.servers" :key="server.name" :value="server.name"
                               :selected="server.name === wireguard.config.serverName">
                               {{ server.name }}
@@ -137,6 +136,7 @@
                 </div>
               </form>
               <div class="mt-4 buttons">
+                <button class="button is-info mx-auto" @click="refreshInfo">Reset</button>
                 <button class="button is-success mx-auto" @click="saveConfig" :disabled="!isModified">Save</button>
               </div>
             </div>
@@ -174,7 +174,9 @@
 
                   <div class="columns">
                     <div class="column is-3 has-text-weight-bold">Location:</div>
-                    <div class="column" id="location">{{ ipInfo.city }}, {{ ipInfo.country }}</div>
+                    <div class="column" id="location">
+                      {{ ipInfo.city }}, {{ ipInfo.region }}, {{ ipInfo.country }}, {{ ipInfo.postal }}
+                    </div>
                   </div>
 
                   <div class="columns">
@@ -235,14 +237,24 @@
 </template>
 
 <script>
+// Main App Component
 export default {
   data() {
     return {
       currentTab: 'config',
-      ipInfo: null,
-      openvpn: {
-        running: false,
+      global: {
         modified: false,
+        config: {
+          vpnType: 'OpenVPN',
+          vpnTypes: ['OpenVPN', 'Wireguard'],
+          subnets: [],
+          proxyUsername: '',
+          proxyPassword: '',
+        }
+      },
+      openvpn: {
+        modified: false,
+        running: false,
         config: {
           enabled: false,
           serverName: '',
@@ -273,16 +285,7 @@ export default {
           enabled: false,
         }
       },
-      global: {
-        modified: false,
-        config: {
-          vpnType: 'OpenVPN',
-          vpnTypes: ['OpenVPN', 'Wireguard'],
-          subnets: [],
-          proxyUsername: '',
-          proxyPassword: '',
-        }
-      }
+      ipInfo: null,
     }
   },
   components: {
@@ -296,50 +299,33 @@ export default {
     'icon': Vue.defineAsyncComponent(() => ComponentLoader.import('core/icon')),
   },
   methods: {
-    async reload() {
+    async refreshInfo() {
       var status = await fetch('/api/status').then(response => response.json());
 
-      var globalConfig = status.global.config;
-      Object.assign(this.global.config, {
-        vpnType: globalConfig.vpnType || 'OpenVPN',
-        subnets: globalConfig.subnets || [],
-      });
+      // console.log(status);
+
+      this.global.config = status.global.config;
       this.global.modified = false;
 
+      this.openvpn.running = status.openvpn.running;
       var openVPNConfig = status.openvpn.config;
-      Object.assign(this.openvpn.config, {
-        running: status.openvpn.running || false,
-        enabled: openVPNConfig.enabled || false,
-        serverName: openVPNConfig.serverName || '',
-        serverEndpoint: openVPNConfig.serverEndpoint || '',
-        logLevel: openVPNConfig.logLevel || 3,
-        retryInterval: openVPNConfig.retryInterval || 3600,
-      });
+      this.openvpn.config = openVPNConfig;
       this.openvpn["servers"] = openVPNConfig.servers || [];
       this.openvpn.modified = false;
 
+      this.wireguard.running = status.wireguard.running;
       var wireguardConfig = status.wireguard.config;
-      Object.assign(this.wireguard.config, {
-        running: status.wireguard.running || false,
-        enabled: wireguardConfig.enabled || false,
-        serverName: wireguardConfig.serverName || '',
-      });
+      this.wireguard.config = wireguardConfig;
       this.wireguard["servers"] = wireguardConfig.servers || [];
       this.wireguard.modified = false;
 
-      var httpProxyConfig = status.http_proxy.config;
-      Object.assign(this.http_proxy.config, {
-        running: status.http_proxy.running || false,
-        enabled: httpProxyConfig.enabled || false,
-      });
+      this.http_proxy.running = status.http_proxy.running;
+      this.http_proxy.config = status.http_proxy.config;
 
-      var socksProxyConfig = status.socks_proxy.config;
-      Object.assign(this.socks_proxy.config, {
-        running: status.socks_proxy.running || false,
-        enabled: socksProxyConfig.enabled || false,
-      });
+      this.socks_proxy.running = status.socks_proxy.running;
+      this.socks_proxy.config = status.socks_proxy.config;
 
-      this.refreshInfo();
+      this.ipInfo = status.ipInfo;
     },
     toggleModule: function (module) {
       this[module].config.enabled = !this[module].config.enabled;
@@ -353,8 +339,25 @@ export default {
         }, 5000);
       });
     },
-    setModified: function (what) {
-      this[what].modified = true;
+    setModified: function (event) {
+      switch (event.target.id) {
+        case 'lan-subnets':
+          this.global.modified = true;
+          break;
+        case 'vpn-type':
+          this.global.modified = true;
+          break;
+        case 'openvpn-provider':
+          this.openvpn.config.serverEndpoint = '';
+          this.openvpn.modified = true;
+          break;
+        case 'openvpn-endpoint':
+          this.openvpn.modified = true;
+          break;
+        case 'wireguard-provider':
+          this.wireguard.modified = true;
+          break;
+      }
     },
     saveConfig: function (module) {
       if (this.openvpn.modified) {
@@ -400,16 +403,6 @@ export default {
         });
       }
     },
-    refreshInfo: function () {
-      try {
-        fetch('/api/openvpn/status').then(response => response.json()).then(data => {
-          this.vpnStatus = data;
-          this.ipInfo = data.info;
-        });
-      } catch (error) {
-        // console.log(error);
-      }
-    },
   },
   computed: {
     vpnEnabled: function () {
@@ -422,9 +415,9 @@ export default {
     },
     vpnRunning: function () {
       if (this.global.config.vpnType === 'OpenVPN') {
-        return this.openvpn.config.running;
+        return this.openvpn.running;
       } else if (this.global.config.vpnType === 'Wireguard') {
-        return this.wireguard.config.running;
+        return this.wireguard.running;
       }
       return false;
     },
@@ -437,11 +430,20 @@ export default {
       return [];
     },
     isModified: function () {
-      return this.openvpn.modified || this.global.modified;
+      if (this.global.config.vpnType === 'OpenVPN') {
+        if (!(this.openvpn.config.serverName && this.openvpn.config.serverEndpoint)) {
+          return false;
+        }
+      } else if (this.global.config.vpnType === 'Wireguard') {
+        if (this.wireguard.config.serverName === '') {
+          return false;
+        }
+      }
+      return this.global.modified || this.openvpn.modified || this.wireguard.modified;
     }
   },
   mounted() {
-    this.reload();
+    this.refreshInfo();
   }
 }
 </script>

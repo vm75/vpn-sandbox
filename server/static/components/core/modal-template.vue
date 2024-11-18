@@ -18,6 +18,7 @@
 </template>
 
 <script>
+// Modal Template
 export default {
   name: "modal-template",
   props: {

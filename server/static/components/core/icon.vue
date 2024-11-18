@@ -9,7 +9,9 @@
 </template>
 
 <script>
+// Icon Component
 export default {
+  name: "icon",
   props: {
     icon: {
       type: String,
@@ -18,7 +20,7 @@ export default {
     banner: {
       type: String,
       default: null
-    }
+    },
   },
   watch: {
     icon() {
