@@ -67,8 +67,8 @@ func runOpenVPN() {
 			cmd[1:]...,
 		)
 
-		openvpnCmd.Stdout = os.Stdout
-		openvpnCmd.Stderr = os.Stderr
+		openvpnCmd.Stdout = utils.GetLogFile()
+		openvpnCmd.Stderr = utils.GetLogFile()
 
 		err := openvpnCmd.Start()
 		if err != nil {
@@ -97,7 +97,7 @@ func killOpenVPN() {
 		cmd = append([]string{"sudo"}, cmd...)
 	}
 
-	go utils.RunCommand(cmd[0], cmd[1:]...)
+	utils.RunCommand(cmd[0], cmd[1:]...)
 	// openvpnCmd.Wait()
 }
 

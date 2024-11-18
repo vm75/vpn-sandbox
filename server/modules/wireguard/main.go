@@ -10,13 +10,15 @@ import (
 const ModuleName = "wireguard"
 
 type WireguardModule struct {
-	Enabled    bool   `json:"enabled"`
-	ServerName string `json:"serverName"`
+	Enabled        bool   `json:"enabled"`
+	ServerName     string `json:"serverName"`
+	ServerEndpoint string `json:"serverEndpoint"`
 }
 
 var wireguardConfig = WireguardModule{
-	Enabled:    false,
-	ServerName: "",
+	Enabled:        false,
+	ServerName:     "",
+	ServerEndpoint: "",
 }
 
 func InitModule() {

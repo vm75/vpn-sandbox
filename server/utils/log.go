@@ -41,5 +41,8 @@ func LogFatal(items ...any) {
 }
 
 func GetLogFile() *os.File {
+	if logFile == nil {
+		return os.Stdout
+	}
 	return logFile
 }

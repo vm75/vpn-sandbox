@@ -1,15 +1,19 @@
 <template>
-  <div id="wireguard-config-modal"></div>
-  <list-editor :name="'Wireguard Servers'" :list="serverList" :editItem="editServer" :addItem="editServer"
+  <div id="vpn-config-modal"></div>
+  <list-editor :name="vpnType + ' Servers'" :list="serverList" :editItem="editServer" :addItem="editServer"
     :removeItem="deleteServer" :displayString="serversDisplayString">
   </list-editor>
 </template>
 
 <script>
-// Wireguard Config Component
+// VPN Config Component
 export default {
-  name: 'wireguard-config',
+  name: 'vpn-config',
   props: {
+    vpnType: {
+      type: String,
+      required: true
+    },
     servers: {
       type: Array,
       required: true
@@ -18,6 +22,7 @@ export default {
   data() {
     return {
       serverList: this.servers,
+      serverModule: this.vpnType.toLowerCase()
     }
   },
   components: {
@@ -26,16 +31,21 @@ export default {
   methods: {
     editServer: function (index) {
       ComponentLoader.inject({
-        elementId: "wireguard-config-modal",
-        name: 'edit-wireguard',
-        source: 'app/edit-wireguard',
+        elementId: "vpn-config-modal",
+        name: 'vpn-config-edit',
+        source: 'app/vpn-config-edit',
         data: {
+          vpnType: this.vpnType,
           server: index !== undefined ? this.serverList[index] : {},
           showOnLoad: true
         },
         methods: {
           save: (data) => {
-            fetch('/api/wireguard/servers/save', {
+            if (this.vpnType === 'Wireguard') {
+              delete data.username;
+              delete data.password;
+            }
+            fetch(`/api/${this.serverModule}/servers/save`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -49,7 +59,7 @@ export default {
       });
     },
     deleteServer: function (index) {
-      fetch(`/api/wireguard/servers/delete/${this.serverList[index].name}`, {
+      fetch(`/api/${this.serverModule}/servers/delete/${this.serverList[index].name}`, {
         method: 'DELETE'
       }).then(() => {
         this.refresh();
@@ -59,7 +69,7 @@ export default {
       return server.name;
     },
     refresh: function () {
-      fetch('/api/wireguard/servers').then(response => response.json()).then(data => {
+      fetch(`/api/${this.serverModule}/servers`).then(response => response.json()).then(data => {
         this.serverList = data;
         this.$emit('update:servers', this.serverList);
       })

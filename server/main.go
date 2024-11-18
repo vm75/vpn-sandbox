@@ -25,8 +25,8 @@ func oneTimeSetup() {
 		} else if _, err := os.Stat(core.AppScript); err == nil {
 			utils.LogF("Running one-time setup for apps script %s", core.AppScript)
 			cmd := exec.Command(core.AppScript, "setup")
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
+			cmd.Stdout = utils.GetLogFile()
+			cmd.Stderr = utils.GetLogFile()
 			err := cmd.Run()
 			if err != nil {
 				utils.LogLn(err)

@@ -18,8 +18,8 @@ func startProxy() {
 
 	proxyCmd = exec.Command("/usr/bin/tinyproxy", "-d", "-c", configFile)
 
-	proxyCmd.Stdout = os.Stdout
-	proxyCmd.Stderr = os.Stderr
+	proxyCmd.Stdout = utils.GetLogFile()
+	proxyCmd.Stderr = utils.GetLogFile()
 
 	err := proxyCmd.Start()
 	if err != nil {
@@ -34,6 +34,6 @@ func startProxy() {
 }
 
 func stopProxy() {
-	go utils.RunCommand("/usr/bin/pkill", "-15", "tinyproxy")
+	utils.RunCommand("/usr/bin/pkill", "-15", "tinyproxy")
 	// proxyCmd.Wait()
 }

@@ -18,8 +18,8 @@ func startProxy() {
 
 	proxyCmd = exec.Command("/usr/local/sbin/sockd", "-f", configFile)
 
-	proxyCmd.Stdout = os.Stdout
-	proxyCmd.Stderr = os.Stderr
+	proxyCmd.Stdout = utils.GetLogFile()
+	proxyCmd.Stderr = utils.GetLogFile()
 
 	err := proxyCmd.Start()
 	if err != nil {
@@ -34,6 +34,6 @@ func startProxy() {
 }
 
 func stopProxy() {
-	go utils.RunCommand("/usr/bin/pkill", "-15", "sockd")
+	utils.RunCommand("/usr/bin/pkill", "-15", "sockd")
 	// proxyCmd.Wait()
 }

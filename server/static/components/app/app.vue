@@ -133,6 +133,21 @@
                       </div>
                     </div>
                   </div>
+                  <div v-if="serverHasParams" class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <legend class="label">Server Endpoint</legend>
+                    </div>
+                    <div class="field-body">
+                      <div class="field control select is-fullwidth">
+                        <select id="wireguard-endpoint" v-model="wireguard.config.serverEndpoint" @change="setModified">
+                          <option v-for="endpoint in endpoints" :key="endpoint.name" :value="endpoint.name"
+                            :selected="endpoint.name === wireguard.config.serverEndpoint">
+                            {{ endpoint.name }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </form>
               <div class="mt-4 buttons">
@@ -196,14 +211,14 @@
 
       <!-- OpenVPN Servers Tab -->
       <div v-if="currentTab === 'OpenVPN'" class="box">
-        <openvpn-config v-model:servers="openvpn.servers">
-        </openvpn-config>
+        <vpn-config vpnType="OpenVPN" v-model:servers="openvpn.servers">
+        </vpn-config>
       </div>
 
       <!-- Wireguard Servers Tab -->
       <div v-if="currentTab === 'Wireguard'" class="box">
-        <wireguard-config v-model:servers="wireguard.servers">
-        </wireguard-config>
+        <vpn-config vpnType="Wireguard" v-model:servers="wireguard.servers">
+        </vpn-config>
       </div>
     </div>
   </section>
@@ -271,6 +286,7 @@ export default {
         config: {
           enabled: false,
           serverName: '',
+          serverEndpoint: '',
         },
         servers: [],
       },
@@ -294,8 +310,7 @@ export default {
     'basic': Vue.defineAsyncComponent(() => ComponentLoader.import('core/basic-input')),
     'inline-list': Vue.defineAsyncComponent(() => ComponentLoader.import('core/inline-list')),
     'location-map': Vue.defineAsyncComponent(() => ComponentLoader.import('core/location-map')),
-    'openvpn-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/openvpn-config')),
-    'wireguard-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/wireguard-config')),
+    'vpn-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/vpn-config')),
     'app-status': Vue.defineAsyncComponent(() => ComponentLoader.import('app/app-status')),
     'icon': Vue.defineAsyncComponent(() => ComponentLoader.import('core/icon')),
   },
@@ -357,6 +372,10 @@ export default {
           this.openvpn.modified = true;
           break;
         case 'wireguard-provider':
+          this.wireguard.config.serverEndpoint = '';
+          this.wireguard.modified = true;
+          break;
+        case 'wireguard-endpoint':
           this.wireguard.modified = true;
           break;
       }
@@ -419,17 +438,20 @@ export default {
       }
       return [];
     },
+    serverHasParams: function () {
+      var vpnModule = this.global.config.vpnType.toLowerCase();
+      var server = this[vpnModule].servers.find(server => server.name === this[vpnModule].config.serverName);
+      return server && server.hasParams;
+    },
     isModified: function () {
-      if (this.global.config.vpnType === 'OpenVPN') {
-        if (!(this.openvpn.config.serverName && this.openvpn.config.serverEndpoint)) {
-          return false;
-        }
-      } else if (this.global.config.vpnType === 'Wireguard') {
-        if (this.wireguard.config.serverName === '') {
-          return false;
-        }
+      var vpnModule = this.global.config.vpnType.toLowerCase();
+      if (!this[vpnModule].config.serverName) {
+        return false;
       }
-      return this.global.modified || this.openvpn.modified || this.wireguard.modified;
+      if (this.serverHasParams && !this[vpnModule].config.serverEndpoint) {
+        return false;
+      }
+      return this.global.modified || this[vpnModule].modified || this.wireguard.modified;
     }
   },
   mounted() {

@@ -13,8 +13,8 @@ func RunCommand(command string, args ...string) error {
 
 	cmd := exec.Command(command, args...)
 	// cmd.Env = append(os.Environ(), "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
-	// cmd.Stdout = logFile
-	// cmd.Stderr = logFile
+	cmd.Stdout = logFile
+	cmd.Stderr = logFile
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true, // Create a new process group
 	}

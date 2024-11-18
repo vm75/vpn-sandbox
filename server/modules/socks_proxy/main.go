@@ -33,7 +33,7 @@ func InitModule() {
 		}
 	})
 	utils.AddSignalHandler([]os.Signal{core.VPN_DOWN}, func(_ os.Signal) {
-		go stopProxy()
+		stopProxy()
 	})
 
 	configFile = filepath.Join(core.VarDir, "sockd.conf")

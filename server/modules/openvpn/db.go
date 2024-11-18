@@ -12,6 +12,7 @@ import (
 type Server struct {
 	Name      string              `json:"name"`
 	Template  string              `json:"template"`
+	HasParams bool                `json:"hasParams"`
 	Username  string              `json:"username"`
 	Password  string              `json:"password"`
 	Endpoints []map[string]string `json:"endpoints"`
@@ -21,18 +22,19 @@ var createServersQuery = `CREATE TABLE IF NOT EXISTS openvpnServers (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL UNIQUE,
 	template TEXT NOT NULL,
+	hasParams BOOLEAN NOT NULL,
 	username TEXT NOT NULL,
 	password TEXT NOT NULL,
 	endpoints JSON NOT NULL
 );`
-var getServersQuery = `SELECT name, template, username, password, endpoints
+var getServersQuery = `SELECT name, template, hasParams, username, password, endpoints
 	FROM openvpnServers;`
-var getServerQuery = `SELECT name, template, username, password, endpoints
+var getServerQuery = `SELECT name, template, hasParams, username, password, endpoints
 	FROM openvpnServers
 	WHERE name = ?;`
 var insertServerQuery = `INSERT OR REPLACE INTO openvpnServers
-	(name, template, username, password, endpoints)
-	VALUES (?, ?, ?, ?, ?);`
+	(name, template, hasParams, username, password, endpoints)
+	VALUES (?, ?, ?, ?, ?, ?);`
 var deleteServerQuery = `DELETE FROM openvpnServers WHERE name = ?;`
 
 func initDb() {
@@ -92,7 +94,8 @@ func getOpenVPNServers() []Server {
 	var templates []Server = make([]Server, 0)
 	rows, err := core.Db.Query(getServersQuery)
 	if err != nil {
-		utils.LogFatal(err)
+		utils.LogError("Failed to get OpenVPN servers", err)
+		return templates
 	}
 	defer rows.Close()
 	var endpointsStr []byte
@@ -101,11 +104,12 @@ func getOpenVPNServers() []Server {
 		err := rows.Scan(
 			&config.Name,
 			&config.Template,
+			&config.HasParams,
 			&config.Username,
 			&config.Password,
 			&endpointsStr)
 		if err != nil {
-			utils.LogFatal(err)
+			utils.LogError("Error getting OpenVPN servers", err)
 			return templates
 		}
 		json.Unmarshal(endpointsStr, &config.Endpoints)
@@ -121,11 +125,12 @@ func getOpenVPNServer(name string) *Server {
 	err := row.Scan(
 		&config.Name,
 		&config.Template,
+		&config.HasParams,
 		&config.Username,
 		&config.Password,
 		&endpointsStr)
 	if err != nil {
-		utils.LogFatal(err)
+		utils.LogError("Error getting OpenVPN server", err)
 		return nil
 	}
 	json.Unmarshal(endpointsStr, &config.Endpoints)
@@ -138,23 +143,25 @@ func saveOpenVPNServer(serverConfig Server) error {
 	for i, endpoint := range serverConfig.Endpoints {
 		if endpoint["name"] == "" || savedNames[endpoint["name"]] {
 			serverConfig.Endpoints = append(serverConfig.Endpoints[:i], serverConfig.Endpoints[i+1:]...)
+		} else {
+			savedNames[endpoint["name"]] = true
 		}
-		savedNames[endpoint["name"]] = true
 	}
 
 	endpointsStr, err := json.Marshal(serverConfig.Endpoints)
 	if err != nil {
-		utils.LogFatal(err)
+		utils.LogError("Error saving OpenVPN server", err)
 		return err
 	}
 	_, err = core.Db.Exec(insertServerQuery,
 		serverConfig.Name,
 		serverConfig.Template,
+		serverConfig.HasParams,
 		serverConfig.Username,
 		serverConfig.Password,
 		endpointsStr)
 	if err != nil {
-		utils.LogFatal(err)
+		utils.LogError("Error saving OpenVPN server", err)
 	}
 	return err
 }
@@ -162,7 +169,7 @@ func saveOpenVPNServer(serverConfig Server) error {
 func DeleteServer(name string) error {
 	_, err := core.Db.Exec(deleteServerQuery, name)
 	if err != nil {
-		utils.LogFatal(err)
+		utils.LogError("Error deleting OpenVPN server", err)
 	}
 	return err
 }

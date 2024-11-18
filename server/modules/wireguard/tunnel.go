@@ -1,6 +1,7 @@
 package wireguard
 
 import (
+	"errors"
 	"net"
 	"os"
 	"os/exec"
@@ -57,14 +58,30 @@ func tunnelUp() error {
 	}
 
 	var server = getWireguardServer(wireguardConfig.ServerName)
+	if server == nil {
+		return errors.New("server not found")
+	}
+	var endPoint map[string]string = nil
+
+	for _, entry := range server.Endpoints {
+		if entry["name"] == wireguardConfig.ServerEndpoint {
+			endPoint = entry
+			break
+		}
+	}
+
+	wgConfig := server.Template
+	for key, value := range endPoint {
+		wgConfig = strings.ReplaceAll(wgConfig, "{{"+key+"}}", value)
+	}
 
 	// var hostGateway string
-	privateKey := findValue(server.Template, "PrivateKey", "")
-	peerPublicKey := findValue(server.Template, "PublicKey", "")
-	endpoint := findValue(server.Template, "Endpoint", "")
-	DNS := findValue(server.Template, "DNS", "1.1.1.1, 1.0.0.1")
+	privateKey := findValue(wgConfig, "PrivateKey", "")
+	peerPublicKey := findValue(wgConfig, "PublicKey", "")
+	endpoint := findValue(wgConfig, "Endpoint", "")
+	DNS := findValue(wgConfig, "DNS", "1.1.1.1, 1.0.0.1")
 	address := getAddress(endpoint)
-	allowedIps := findValue(server.Template, "AllowedIPs", "0.0.0.0/0")
+	allowedIps := findValue(wgConfig, "AllowedIPs", "0.0.0.0/0")
 
 	utils.RunCommand("/sbin/ip", "link", "add", "dev", "wg0", "type", "wireguard")
 

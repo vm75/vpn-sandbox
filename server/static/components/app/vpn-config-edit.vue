@@ -4,18 +4,30 @@
       <div class="modal-background"></div>
       <div class="modal-card">
         <header class="modal-card-head">
-          <p class="modal-card-title">{{ server.name ? 'Edit Wireguard Provider' : 'New Wireguard Provider' }}</p>
+          <p class="modal-card-title">{{ title }}</p>
           <button class="delete" aria-label="close" @click="cancel"></button>
         </header>
         <section class="modal-card-body">
           <div class="field">
-            <legend class="label">Wireguard Provider</legend>
+            <legend class="label">{{ vpnType }} Provider</legend>
             <div class="control">
-              <input id="Wireguard-provider" class="input" v-model="server.name" placeholder="Wireguard Provider"
+              <input id="vpn-provider" class="input" v-model="server.name" :placeholder="vpnType + ' Provider'"
                 :disabled="!nameIsEditable" />
             </div>
           </div>
-          <div class="field">
+          <div v-if="vpnType === 'OpenVPN'" class="field">
+            <legend class="label">Username</legend>
+            <div class="control">
+              <input id="vpn-username" class="input" v-model="server.username" placeholder="Username" />
+            </div>
+          </div>
+          <div v-if="vpnType === 'OpenVPN'" class="field">
+            <legend class="label">Password</legend>
+            <div class="control">
+              <input id="vpn-password" class="input" type="password" v-model="server.password" placeholder="Password" />
+            </div>
+          </div>
+          <div class="field" v-if="hasParams">
             <legend class="label">Endpoints</legend>
             <div class="control vue-bulma-input">
               <table class="table is-fullwidth is-striped">
@@ -48,9 +60,9 @@
             </div>
           </div>
           <div class="field">
-            <legend class="label">Wireguard Config</legend>
+            <legend class="label">{{ vpnType }} Config</legend>
             <div class="control">
-              <textarea id="Wireguard-config" class="textarea" v-model="server.template" placeholder="wg config"
+              <textarea id="vpn-template" class="textarea" v-model="server.template" placeholder="config text"
                 style="white-space: pre; overflow-x: auto; font-family: 'Courier New', Courier, monospace;"></textarea>
             </div>
           </div>
@@ -65,18 +77,25 @@
 </template>
 
 <script>
-// Edit Wireguard Component
+// Edit VPN Component
 export default {
-  name: "edit-wireguard",
+  name: "vpn-config-edit",
   props: {
+    vpnType: {
+      type: String,
+      required: true,
+    },
     server: {
       type: Object,
       required: true,
       default: () => {
         return {
           name: '',
-          endpoints: [],
+          username: '',
+          password: '',
           template: '',
+          hasParams: false,
+          endpoints: [],
         }
       },
     },
@@ -89,6 +108,7 @@ export default {
     this.server.endpoints = this.server.endpoints || [];
     this.server.template = this.server.template || '';
     return {
+      title: (this.server.name ? 'Edit ' : 'New ') + this.vpnType + ' Provider',
       isVisible: this.showOnLoad || false,
       nameIsEditable: true,
     }
@@ -105,6 +125,7 @@ export default {
     },
     save() {
       this.isVisible = false;
+      this.server.hasParams = this.hasParams;
       this.$emit('save', this.server);
     },
     newEndpoint() {
@@ -134,7 +155,10 @@ export default {
         return match.map((m) => m.substring(2, m.length - 2));
       }
       return [];
-    }
+    },
+    hasParams() {
+      return this.variables.length > 0;
+    },
   },
   mounted() {
     this.nameIsEditable = !this.server.name;
