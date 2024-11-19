@@ -44,8 +44,9 @@ func GetIpInfo(ipInfo map[string]interface{}) error {
 	// https://worldtimeapi.org/api/ip
 	cmd := exec.Command("/usr/bin/wget", "-q", "-O", "-", "https://ipinfo.io/json")
 	out, err := cmd.CombinedOutput()
-	LogLn(string(out))
 	if err != nil {
+		LogLn(string(out))
+		LogError("Error getting ip info", err)
 		return err
 	}
 

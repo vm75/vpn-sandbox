@@ -1,12 +1,13 @@
 <template>
   <div id="modal"></div>
-  <section class="section">
+  <section>
+    <div class="mb-4 is-flex is-justify-content-center is-align-items-center">
+      <icon icon="assets/vpn-sandbox.png"></icon>
+      <h1 class="title ml-2">VPN Sandbox</h1>
+    </div>
+  </section>
+  <section>
     <div class="container">
-      <div class="is-flex is-justify-content-center is-align-items-center">
-        <icon icon="assets/vpn-sandbox.png"></icon>
-
-        <h1 class="title ml-2">VPN Sandbox</h1>
-      </div>
 
       <!-- Tabs -->
       <div class="tabs is-boxed">
@@ -223,8 +224,8 @@
     </div>
   </section>
   <!-- Footer Section -->
-  <footer class="footer">
-    <div class="content has-text-centered">
+  <section>
+    <div class="mt-4 content has-text-centered">
       <p>Follow the project on:</p>
       <div class="buttons is-centered are-medium">
         <!-- GitHub Button -->
@@ -248,10 +249,13 @@
         Vpn icons created by Ranah Pixel Studio - Flaticon
       </a>
     </div>
-  </footer>
+  </section>
 </template>
 
 <script>
+
+const REFRESH_TIME = 3000;
+
 // Main App Component
 export default {
   data() {
@@ -353,7 +357,7 @@ export default {
       }).then(() => {
         setTimeout(() => {
           this.refreshInfo();
-        }, 5000);
+        }, REFRESH_TIME);
       });
     },
     setModified: function (event) {
@@ -410,7 +414,7 @@ export default {
       }
       setTimeout(() => {
         this.refreshInfo();
-      }, 5000);
+      }, REFRESH_TIME);
     },
   },
   computed: {
@@ -499,8 +503,8 @@ export default {
   font-size: 0.75rem;
   /* Smaller font size */
   position: absolute;
-  bottom: 20px;
-  right: 30px;
+  bottom: 10px;
+  right: 20px;
   color: #555;
   /* Light gray color */
 }

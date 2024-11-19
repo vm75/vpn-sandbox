@@ -14,7 +14,7 @@
         <!-- Icon with Status Banner -->
         <div class="control">
           <icon v-if="running" :icon="mainIcon" banner="assets/locked.svg"></icon>
-          <icon v-else-if="failure !== ''" :icon="mainIcon" banner="assets/failed.svg"></icon>
+          <icon v-else-if="enabled" :icon="mainIcon" banner="assets/failed.svg"></icon>
           <icon v-else :icon="mainIcon" banner="assets/unlocked.svg"></icon>
         </div>
       </div>
