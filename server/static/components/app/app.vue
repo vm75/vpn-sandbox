@@ -21,6 +21,9 @@
           <li :class="{ 'is-active': currentTab === 'Wireguard' }">
             <a @click="currentTab = 'Wireguard'">Wireguard Servers</a>
           </li>
+          <li :class="{ 'is-active': currentTab === 'Files' }">
+            <a @click="currentTab = 'Files'">Runtime Files</a>
+          </li>
         </ul>
       </div>
 
@@ -176,7 +179,7 @@
                   </div>
                 </div>
               </div>
-              <div v-if="ipInfo">
+              <div v-if="ipInfo && Object.keys(ipInfo).length > 0">
                 <div class="container">
                   <div class="columns">
                     <div class="column is-3 has-text-weight-bold">IP Address:</div>
@@ -212,14 +215,17 @@
 
       <!-- OpenVPN Servers Tab -->
       <div v-if="currentTab === 'OpenVPN'" class="box">
-        <vpn-config vpnType="OpenVPN" v-model:servers="openvpn.servers">
-        </vpn-config>
+        <vpn-config vpnType="OpenVPN" v-model:servers="openvpn.servers" />
       </div>
 
       <!-- Wireguard Servers Tab -->
       <div v-if="currentTab === 'Wireguard'" class="box">
-        <vpn-config vpnType="Wireguard" v-model:servers="wireguard.servers">
-        </vpn-config>
+        <vpn-config vpnType="Wireguard" v-model:servers="wireguard.servers" />
+      </div>
+
+      <!-- File Browser Tab -->
+      <div v-if="currentTab === 'Files'" class="box">
+        <file-browser-viewer filesEndpoint="/api/files" fileEndpoint="/api/file" />
       </div>
     </div>
   </section>
@@ -317,6 +323,7 @@ export default {
     'vpn-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/vpn-config')),
     'app-status': Vue.defineAsyncComponent(() => ComponentLoader.import('app/app-status')),
     'icon': Vue.defineAsyncComponent(() => ComponentLoader.import('core/icon')),
+    'file-browser-viewer': Vue.defineAsyncComponent(() => ComponentLoader.import('core/file-browser-viewer')),
   },
   methods: {
     async refreshInfo() {

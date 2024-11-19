@@ -116,3 +116,7 @@ func SaveGlobalConfig(config map[string]interface{}) error {
 
 	return nil
 }
+
+func IsVpnUp() bool {
+	return GetModule("openvpn").IsRunning() || GetModule("wireguard").IsRunning()
+}

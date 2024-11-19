@@ -80,7 +80,8 @@ func tunnelUp() error {
 	peerPublicKey := findValue(wgConfig, "PublicKey", "")
 	endpoint := findValue(wgConfig, "Endpoint", "")
 	DNS := findValue(wgConfig, "DNS", "1.1.1.1, 1.0.0.1")
-	address := getAddress(endpoint)
+	vpnAddress := getAddress(endpoint)
+	address := findValue(wgConfig, "Address", vpnAddress)
 	allowedIps := findValue(wgConfig, "AllowedIPs", "0.0.0.0/0")
 
 	utils.RunCommand("/sbin/ip", "link", "add", "dev", "wg0", "type", "wireguard")
@@ -110,7 +111,7 @@ func tunnelUp() error {
 		Domains:     []string{},
 		DNS:         strings.Fields(strings.ReplaceAll(DNS, ",", " ")),
 		VPNGateway:  "",
-		VpnEndpoint: address,
+		VpnEndpoint: vpnAddress,
 	})
 
 	return nil

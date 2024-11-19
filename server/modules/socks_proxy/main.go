@@ -45,6 +45,26 @@ func (h *HttpProxyModule) IsRunning() bool {
 	return utils.IsRunning(proxyCmd)
 }
 
+func (h *HttpProxyModule) Enable(startNow bool) error {
+	err := h.DefaultModule.Enable(startNow)
+
+	if err == nil && core.IsVpnUp() && startNow {
+		go startProxy()
+	}
+
+	return err
+}
+
+func (h *HttpProxyModule) Disable(stopNow bool) error {
+	err := h.DefaultModule.Disable(stopNow)
+
+	if err == nil && stopNow {
+		stopProxy()
+	}
+
+	return err
+}
+
 // HandleEvent implements utils.EventListener.
 func (h *HttpProxyModule) HandleEvent(event utils.Event) {
 	switch event.Name {

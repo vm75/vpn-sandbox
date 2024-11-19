@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 
@@ -165,6 +167,62 @@ func saveModuleConfig(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+type FileInfo struct {
+	Name  string `json:"name"`
+	Path  string `json:"path"`
+	IsDir bool   `json:"isDir"`
+}
+
+// Helper function to sanitize paths
+func sanitizePath(inputPath string) string {
+	// Prevent navigating outside baseDir
+	cleanPath := filepath.Clean("/" + inputPath) // Ensure the path starts with a slash
+	return filepath.Join(core.VarDir, cleanPath)
+}
+
+func listFiles(w http.ResponseWriter, r *http.Request) {
+	relPath := r.URL.Query().Get("path")
+	absPath := sanitizePath(relPath)
+
+	files, err := os.ReadDir(absPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var fileInfos []FileInfo
+	for _, file := range files {
+		fileInfos = append(fileInfos, FileInfo{
+			Name:  file.Name(),
+			Path:  filepath.Join(relPath, file.Name()), // Preserve the relative path for the client
+			IsDir: file.IsDir(),
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(fileInfos)
+}
+
+func fileContent(w http.ResponseWriter, r *http.Request) {
+	relPath := r.URL.Query().Get("path")
+	absPath := sanitizePath(relPath)
+
+	// Ensure the requested path is inside the base directory
+	if !strings.HasPrefix(absPath, core.VarDir) {
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
+
+	content, err := os.ReadFile(absPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write(content)
+}
+
 // Separate function to handle static files
 func handleStaticFiles(r *mux.Router) {
 	// Serve static files from /static and root (/)
@@ -187,6 +245,10 @@ func WebServer(port string) {
 	r.HandleFunc("/api/status", getStatus).Methods("GET")
 	r.HandleFunc("/api/config", getGlobalConfig).Methods("GET")
 	r.HandleFunc("/api/config/save", saveGlobalConfig).Methods("POST")
+
+	// Handle file
+	r.HandleFunc("/api/files", listFiles)
+	r.HandleFunc("/api/file", fileContent)
 
 	// Module
 	r.HandleFunc("/api/{module}/status", getModuleStatus).Methods("GET")
