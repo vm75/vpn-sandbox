@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const ResolvConfBackup = "/etc/resolv.conf.bak"
+
 func GetDefaultGateway() (string, error) {
 	cmd := exec.Command("ip", "r")
 
@@ -22,21 +24,40 @@ func GetDefaultGateway() (string, error) {
 }
 
 func BackupResolvConf() {
-	// copy exising resolv.conf to resolv.conf.ovpnsave
-	err := RunCommand("/bin/cp", "/etc/resolv.conf", "/etc/resolv.conf.ovpnsave")
-	if !FileExists("/etc/resolv.conf.ovpnsave") {
-		LogError("Error creating /etc/resolv.conf.ovpnsave", err)
+	if !FileExists(ResolvConfBackup) {
+		// copy exising resolv.conf to resolv.conf.bak
+		err := RunCommand("/bin/cp", "/etc/resolv.conf", ResolvConfBackup)
+		if !FileExists(ResolvConfBackup) {
+			LogError("Error creating "+ResolvConfBackup, err)
+		}
 	}
 }
 
 func RestoreResolvConf() {
-	// copy exising resolv.conf.ovpnsave to resolv.conf. don't use cp, read content from resolv.conf.ovpnsave
-	if _, err := os.Stat("/etc/resolv.conf.ovpnsave"); !os.IsNotExist(err) {
-		fileContent, _ := os.ReadFile("/etc/resolv.conf.ovpnsave")
+	// copy exising resolv.conf.bak to resolv.conf. don't use cp, read content from resolv.conf.bak
+	if _, err := os.Stat(ResolvConfBackup); !os.IsNotExist(err) {
+		fileContent, _ := os.ReadFile(ResolvConfBackup)
 		if err := os.WriteFile("/etc/resolv.conf", fileContent, 0644); err != nil {
 			LogError("Error updating /etc/resolv.conf", err)
 		}
 	}
+}
+
+func GetHostGateway() string {
+	if _, err := os.Stat(ResolvConfBackup); !os.IsNotExist(err) {
+		fileContent, err := os.ReadFile(ResolvConfBackup)
+		if err == nil {
+			// extract first nameserver as host gateway
+			lines := strings.Split(string(fileContent), "\n")
+			for _, line := range lines {
+				if strings.HasPrefix(line, "nameserver") {
+					return strings.Split(line, " ")[1]
+				}
+			}
+		}
+	}
+
+	return ""
 }
 
 func GetIpInfo(ipInfo map[string]interface{}) error {

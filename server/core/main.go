@@ -63,6 +63,14 @@ func Init(dataDir string, appMode AppMode) error {
 		return err
 	}
 
+	// Delete all log/pid files in var dir
+	for _, pattern := range []string{"*.log*", "*.pid"} {
+		files, _ := filepath.Glob(VarDir + "/" + pattern)
+		for _, file := range files {
+			os.Remove(file)
+		}
+	}
+
 	if appMode == OpenVPNAction {
 		return nil
 	}

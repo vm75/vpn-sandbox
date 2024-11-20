@@ -1,28 +1,9 @@
 package actions
 
 import (
-	"os"
-	"strings"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 )
-
-func getHostGateway() string {
-	if _, err := os.Stat("/etc/resolv.conf.ovpnsave"); !os.IsNotExist(err) {
-		fileContent, err := os.ReadFile("/etc/resolv.conf.ovpnsave")
-		if err == nil {
-			// extract first nameserver as host gateway
-			lines := strings.Split(string(fileContent), "\n")
-			for _, line := range lines {
-				if strings.HasPrefix(line, "nameserver") {
-					return strings.Split(line, " ")[1]
-				}
-			}
-		}
-	}
-
-	return ""
-}
 
 func VpnDown() {
 	utils.LogLn("vpn down")
@@ -31,7 +12,7 @@ func VpnDown() {
 	utils.RestoreResolvConf()
 
 	// get host gateway from resolv.conf
-	hostGateway := getHostGateway()
+	hostGateway := utils.GetHostGateway()
 	utils.LogLn("host gateway: " + hostGateway)
 
 	if core.Testing {

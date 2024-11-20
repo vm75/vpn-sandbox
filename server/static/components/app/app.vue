@@ -225,7 +225,7 @@
 
       <!-- File Browser Tab -->
       <div v-if="currentTab === 'Files'" class="box">
-        <file-browser-viewer filesEndpoint="/api/files" fileEndpoint="/api/file" />
+        <file-explorer filesEndpoint="/api/files" fileEndpoint="/api/file" />
       </div>
     </div>
   </section>
@@ -323,7 +323,7 @@ export default {
     'vpn-config': Vue.defineAsyncComponent(() => ComponentLoader.import('app/vpn-config')),
     'app-status': Vue.defineAsyncComponent(() => ComponentLoader.import('app/app-status')),
     'icon': Vue.defineAsyncComponent(() => ComponentLoader.import('core/icon')),
-    'file-browser-viewer': Vue.defineAsyncComponent(() => ComponentLoader.import('core/file-browser-viewer')),
+    'file-explorer': Vue.defineAsyncComponent(() => ComponentLoader.import('core/file-explorer')),
   },
   methods: {
     async refreshInfo(force) {

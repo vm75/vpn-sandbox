@@ -99,10 +99,10 @@ func main() {
 	actions.VpnDown()
 
 	// Register modules
-	openvpn.InitModule()
-	wireguard.InitModule()
 	http_proxy.InitModule()
 	socks_proxy.InitModule()
+	openvpn.InitModule()
+	wireguard.InitModule()
 
 	// Launch webserver
 	webserver.WebServer(params["--port"].GetValue())

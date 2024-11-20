@@ -35,7 +35,6 @@ func InitModule() {
 	utils.AddSignalHandler([]os.Signal{core.VPN_DOWN}, func(_ os.Signal) {
 		stopProxy()
 	})
-	utils.RegisterListener("vpn-down", &module)
 
 	configFile = filepath.Join(core.VarDir, "tinyproxy.conf")
 	pidFile = filepath.Join(core.VarDir, "tinyproxy.pid")
