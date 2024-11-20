@@ -16,6 +16,7 @@ func VpnDown() {
 	utils.LogLn("host gateway: " + hostGateway)
 
 	if core.Testing {
+		utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
 		utils.LogLn("Skipping vpn down actions for testing")
 		return
 	}
@@ -41,5 +42,6 @@ func VpnDown() {
 	utils.RunCommand("/sbin/iptables", "-A", "INPUT", "-j", "DROP")
 
 	// Trigger vpn down actions
+	utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
 	utils.RunCommand(core.AppScript, "down")
 }

@@ -8,7 +8,7 @@
             <ul>
               <li v-for="(item, index) in fileTree" :key="index" @click="fetchFileContent(item.path)"
                 class="has-text-weight-semibold">
-                <a @click.prevent="selectItem(item)">
+                <a>
                   <span v-if="item.isDir">📁</span>
                   <span v-else>📄</span>
                   {{ item.name }}

@@ -7,10 +7,11 @@ import (
 	"vpn-sandbox/utils"
 )
 
-var proxyCmd *exec.Cmd = nil
-
 func startProxy(p *ProxyModule) {
-	if utils.IsRunning(proxyCmd) {
+	if !p.Config["enabled"].(bool) {
+		return
+	}
+	if utils.IsRunning(p.cmdObject) {
 		utils.LogF("%s is already running\n", p.displayName)
 		return
 	}
@@ -21,18 +22,18 @@ func startProxy(p *ProxyModule) {
 		return
 	}
 
-	proxyCmd = exec.Command(p.proxyCmd[0], p.proxyCmd[1:]...)
+	p.cmdObject = exec.Command(p.proxyCmd[0], p.proxyCmd[1:]...)
 
-	proxyCmd.Stdout = utils.GetLogFile()
-	proxyCmd.Stderr = utils.GetLogFile()
+	p.cmdObject.Stdout = utils.GetLogFile()
+	p.cmdObject.Stderr = utils.GetLogFile()
 
-	err = proxyCmd.Start()
+	err = p.cmdObject.Start()
 	if err != nil {
 		utils.LogError("Error starting "+p.displayName, err)
 	} else {
-		utils.LogF("%s started with pid %d\n", p.displayName, proxyCmd.Process.Pid)
-		os.WriteFile(p.pidFile, []byte(strconv.Itoa(proxyCmd.Process.Pid)), 0644)
-		status := proxyCmd.Wait()
+		utils.LogF("%s started with pid %d\n", p.displayName, p.cmdObject.Process.Pid)
+		os.WriteFile(p.pidFile, []byte(strconv.Itoa(p.cmdObject.Process.Pid)), 0644)
+		status := p.cmdObject.Wait()
 		os.Remove(p.pidFile)
 		utils.LogF("%s exited with status: %v\n", p.displayName, status)
 	}
@@ -41,5 +42,6 @@ func startProxy(p *ProxyModule) {
 func stopProxy(p *ProxyModule) {
 	utils.LogF("Stopping %s\n", p.displayName)
 	utils.RunCommand("/usr/bin/pkill", "-15", p.execName)
+	p.cmdObject = nil
 	// proxyCmd.Wait()
 }

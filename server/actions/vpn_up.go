@@ -85,6 +85,7 @@ func VpnUp(netSpec *NetSpec) {
 	}
 
 	if core.Testing {
+		utils.PublishEvent(utils.Event{Name: "vpn-up", Context: map[string]interface{}{"dev": netSpec.Dev}})
 		utils.LogLn("Skipping vpn up actions for testing")
 		utils.LogLn("resolv.conf: " + sb.String())
 		return
@@ -125,5 +126,6 @@ func VpnUp(netSpec *NetSpec) {
 	utils.RunCommand("/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-j", "DROP")
 
 	// Trigger vpn-up actions
+	utils.PublishEvent(utils.Event{Name: "vpn-up", Context: map[string]interface{}{"dev": netSpec.Dev}})
 	utils.RunCommand(core.AppScript, "up")
 }

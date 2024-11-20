@@ -80,6 +80,7 @@ func main() {
 	}
 
 	utils.AddSignalHandler([]os.Signal{core.VPN_UP, core.VPN_DOWN, core.SHUTDOWN}, func(sig os.Signal) {
+		utils.LogF("Received signal %s\n", sig)
 		switch sig {
 		case core.VPN_UP:
 			actions.VpnUp(nil)

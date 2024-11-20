@@ -26,8 +26,8 @@ func RunCommand(command string, args ...string) error {
 	return err
 }
 
-func IsRunning(cmd *exec.Cmd) bool {
-	return cmd != nil && cmd.Process != nil && (cmd.ProcessState == nil || !cmd.ProcessState.Exited())
+func IsRunning(cmdObject *exec.Cmd) bool {
+	return cmdObject != nil && cmdObject.Process != nil && (cmdObject.ProcessState == nil || !cmdObject.ProcessState.Exited())
 }
 
 func SignalCmd(cmd *exec.Cmd, signal os.Signal) {
@@ -43,28 +43,29 @@ func CreateUser(username string) {
 }
 
 func SignalRunning(pidFile string, signal os.Signal) bool {
-	isRunning := false
 	if _, err := os.Stat(pidFile); err != nil {
-		return isRunning
+		LogF("PID file %s not found\n", pidFile)
+		return false
 	}
+
 	file, err := os.Open(pidFile)
 	if err != nil {
-		return isRunning
+		LogF("Error opening PID file %s\n", pidFile)
+		return false
 	}
 	defer file.Close()
 	var pid int
 	_, err = fmt.Fscanf(file, "%d", &pid)
 	if err != nil {
-		return isRunning
-	}
-	proc, err := os.FindProcess(pid)
-	if err == nil {
-		err = proc.Signal(signal)
-		if err != nil {
-			return isRunning
-		}
-		isRunning = true
+		LogF("Error reading PID from file %s\n", pidFile)
+		return false
 	}
 
-	return isRunning
+	err = SignalProcess(pid, syscall.Signal(0))
+	if err != nil {
+		LogF("Process with PID %d is not running\n", pid)
+	}
+
+	LogF("Sending signal %s to process with PID %d\n", signal, pid)
+	return SignalProcess(pid, signal) == nil
 }

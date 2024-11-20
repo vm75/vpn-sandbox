@@ -19,15 +19,17 @@ var eventMutex = sync.RWMutex{}
 var eventListeners = make(map[string][]EventListener)
 
 // RegisterListener registers a new listener to the event bus.
-func RegisterListener(eventName string, listener EventListener) {
+func RegisterListener(eventNames []string, listener EventListener) {
 	eventMutex.Lock()
 	defer eventMutex.Unlock()
 
-	if _, exists := eventListeners[eventName]; !exists {
-		eventListeners[eventName] = make([]EventListener, 0)
-	}
+	for _, eventName := range eventNames {
+		if _, exists := eventListeners[eventName]; !exists {
+			eventListeners[eventName] = make([]EventListener, 0)
+		}
 
-	eventListeners[eventName] = append(eventListeners[eventName], listener)
+		eventListeners[eventName] = append(eventListeners[eventName], listener)
+	}
 }
 
 // PublishEvent publishes an event with a given context to all registered listeners.

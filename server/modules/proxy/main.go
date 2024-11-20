@@ -1,7 +1,7 @@
 package proxy
 
 import (
-	"os"
+	"os/exec"
 	"path/filepath"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
@@ -22,6 +22,7 @@ type ProxyModule struct {
 	proxyCmd    []string
 	configFile  string
 	pidFile     string
+	cmdObject   *exec.Cmd
 }
 
 func InitModule(proxyType ProxyType) {
@@ -39,6 +40,7 @@ func InitModule(proxyType ProxyType) {
 			proxyCmd:    []string{"/usr/bin/tinyproxy", "-d", "-c", configFile},
 			configFile:  configFile,
 			pidFile:     filepath.Join(core.VarDir, "tinyproxy.pid"),
+			cmdObject:   nil,
 		}
 	case SocksProxy:
 		configFile := filepath.Join(core.VarDir, "sockd.conf")
@@ -52,26 +54,19 @@ func InitModule(proxyType ProxyType) {
 			proxyCmd:    []string{"/usr/local/sbin/sockd", "-f", configFile},
 			configFile:  configFile,
 			pidFile:     filepath.Join(core.VarDir, "sockd.pid"),
+			cmdObject:   nil,
 		}
 	}
 
 	module.LoadConfig()
 
 	core.RegisterModule(module.Name, &module)
-	utils.RegisterListener("global-config-changed", &module)
-	utils.AddSignalHandler([]os.Signal{core.VPN_UP}, func(_ os.Signal) {
-		if module.Config["enabled"].(bool) {
-			go startProxy(&module)
-		}
-	})
-	utils.AddSignalHandler([]os.Signal{core.VPN_DOWN}, func(_ os.Signal) {
-		stopProxy(&module)
-	})
+	utils.RegisterListener([]string{"global-config-changed", "vpn-up", "vpn-down"}, &module)
 }
 
 // IsRunning implements core.Module.
 func (p *ProxyModule) IsRunning() bool {
-	return utils.IsRunning(proxyCmd)
+	return utils.IsRunning(p.cmdObject)
 }
 
 func (p *ProxyModule) Enable(startNow bool) error {
@@ -98,6 +93,12 @@ func (p *ProxyModule) Disable(stopNow bool) error {
 func (p *ProxyModule) HandleEvent(event utils.Event) {
 	switch event.Name {
 	case "global-config-changed":
-		updateProxyConfig(p)
+		stopProxy(p)
+		go startProxy(p)
+	case "vpn-up":
+		stopProxy(p)
+		go startProxy(p)
+	case "vpn-down":
+		stopProxy(p)
 	}
 }

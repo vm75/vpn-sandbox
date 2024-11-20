@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"errors"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 )
 
@@ -45,4 +47,12 @@ func AddSignalHandler(signals []os.Signal, handler SignalHandler) {
 	for _, sig := range signals {
 		signalHandlers[sig] = append(signalHandlers[sig], handler)
 	}
+}
+
+func SignalProcess(pid int, signal os.Signal) error {
+	sigStr := signal.String()
+	if sigStr == "" {
+		return errors.New("invalid signal")
+	}
+	return RunCommand("/bin/kill", "-"+sigStr[7:], strconv.Itoa(pid))
 }

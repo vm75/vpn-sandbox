@@ -260,7 +260,7 @@
 
 <script>
 
-const REFRESH_TIME = 3000;
+const REFRESH_TIME = 5000;
 
 // Main App Component
 export default {
@@ -329,7 +329,7 @@ export default {
     async refreshInfo(force) {
       var status = await fetch(`/api/status?force=${force}`).then(response => response.json());
 
-      // console.log(status);
+      console.log(status);
 
       this.global.config = status.global.config;
       this.global.vpnType = status.global.config.vpnType;

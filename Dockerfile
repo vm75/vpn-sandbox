@@ -5,7 +5,7 @@ FROM golang:alpine AS build
 WORKDIR /workdir
 
 # Install build dependencies
-RUN apk add --no-cache build-base
+RUN apk add --no-cache build-base upx
 
 # Build dante from source
 ARG DANTE_VERSION=1.4.3
@@ -14,11 +14,19 @@ RUN wget https://www.inet.no/dante/files/dante-$DANTE_VERSION.tar.gz --output-do
     ac_cv_func_sched_setscheduler=no ./configure --disable-client && \
     make install
 
+# Download go dependencies
+COPY server/go.mod server/go.sum /workdir/server/
+RUN go mod download -C /workdir/server
+
 # Copy the server code
 COPY server /workdir/server
 
 # Build go server
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -C /workdir/server -ldflags="-s -w" -o /workdir/vpn-sandbox
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -C /workdir/server -ldflags="-s -w" -o /workdir/vpn-sandbox
+
+# Compress the binary
+RUN upx /workdir/vpn-sandbox
 
 # Stage 2: Create the final minimal image
 FROM alpine
