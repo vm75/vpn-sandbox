@@ -2,4 +2,3 @@ var/
 config/
 wg0.conf
 wg.sh
-*.html

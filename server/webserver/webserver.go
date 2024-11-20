@@ -195,6 +195,9 @@ func listFiles(w http.ResponseWriter, r *http.Request) {
 
 	var fileInfos []FileInfo
 	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".auth") {
+			continue
+		}
 		fileInfos = append(fileInfos, FileInfo{
 			Name:  file.Name(),
 			Path:  filepath.Join(relPath, file.Name()), // Preserve the relative path for the client
@@ -211,7 +214,7 @@ func fileContent(w http.ResponseWriter, r *http.Request) {
 	absPath := sanitizePath(relPath)
 
 	// Ensure the requested path is inside the base directory
-	if !strings.HasPrefix(absPath, core.VarDir) {
+	if !strings.HasPrefix(absPath, core.VarDir) || strings.HasSuffix(absPath, ".auth") {
 		http.Error(w, "Access denied", http.StatusForbidden)
 		return
 	}

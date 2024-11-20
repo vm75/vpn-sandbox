@@ -6,9 +6,8 @@ import (
 	"path/filepath"
 	"vpn-sandbox/actions"
 	"vpn-sandbox/core"
-	"vpn-sandbox/modules/http_proxy"
 	"vpn-sandbox/modules/openvpn"
-	"vpn-sandbox/modules/socks_proxy"
+	"vpn-sandbox/modules/proxy"
 	"vpn-sandbox/modules/wireguard"
 	"vpn-sandbox/utils"
 	"vpn-sandbox/webserver"
@@ -99,8 +98,8 @@ func main() {
 	actions.VpnDown()
 
 	// Register modules
-	http_proxy.InitModule()
-	socks_proxy.InitModule()
+	proxy.InitModule(proxy.HttpProxy)
+	proxy.InitModule(proxy.SocksProxy)
 	openvpn.InitModule()
 	wireguard.InitModule()
 
