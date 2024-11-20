@@ -71,6 +71,5 @@ func (h *HttpProxyModule) HandleEvent(event utils.Event) {
 	switch event.Name {
 	case "global-config-changed":
 		updateRuntimeConfig()
-
 	}
 }

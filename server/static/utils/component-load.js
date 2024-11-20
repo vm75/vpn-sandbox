@@ -141,7 +141,7 @@
       // Step 2: Transpose the string content (You can modify this method as needed)
       const templateMatch = content.match(/<template>([\s\S]*?)<\/template>/);
       const styleMatch = content.match(/<style(?:[^>]*)>([\s\S]*?)<\/style>/);
-      const scriptMatch = content.match(/<script>([\s\S]*)export\s+default\s*{([\s\S]*)}\s*<\/script>/);
+      const scriptMatch = content.match(/<script>([\s\S]*)export\s+default\s*{([\s\S]*)}[;\s]*<\/script>/);
 
       const template = templateMatch ? templateMatch[1].trim() : '';
       const imports = scriptMatch ? scriptMatch[1].trim() : '';

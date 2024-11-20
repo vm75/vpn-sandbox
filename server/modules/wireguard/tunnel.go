@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"vpn-sandbox/actions"
+	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 )
 
@@ -106,6 +107,8 @@ func tunnelUp() error {
 		return nil
 	}
 
+	utils.SignalRunning(core.ServerPidFile, core.VPN_UP)
+
 	actions.VpnUp(&actions.NetSpec{
 		Dev:         "wg0",
 		Domains:     []string{},
@@ -121,9 +124,11 @@ func tunnelDown() error {
 	utils.RunCommand("/sbin/ip", "link", "set", "down", "dev", "wg0")
 	utils.RunCommand("/sbin/ip", "link", "del", "dev", "wg0")
 
-	if !isTunnelUp() {
+	if isTunnelUp() {
 		utils.LogLn("Tunnel down failed")
 	}
+
+	utils.SignalRunning(core.ServerPidFile, core.VPN_DOWN)
 
 	actions.VpnDown()
 

@@ -120,3 +120,12 @@ func SaveGlobalConfig(config map[string]interface{}) error {
 func IsVpnUp() bool {
 	return GetModule("openvpn").IsRunning() || GetModule("wireguard").IsRunning()
 }
+
+func GetVpnDevice() string {
+	if (GlobalConfig.VPNType == "OpenVPN") && GetModule("openvpn").IsRunning() {
+		return "tun0"
+	} else if (GlobalConfig.VPNType == "Wireguard") && GetModule("wireguard").IsRunning() {
+		return "wg0"
+	}
+	return ""
+}

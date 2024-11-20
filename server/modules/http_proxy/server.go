@@ -11,19 +11,24 @@ var proxyCmd *exec.Cmd = nil
 
 func startProxy() {
 	if utils.IsRunning(proxyCmd) {
+		utils.LogLn("Http Proxy is already running")
 		return
 	}
 
-	updateRuntimeConfig()
+	err := updateRuntimeConfig()
+	if err != nil {
+		utils.LogError("Error updating runtime config", err)
+		return
+	}
 
 	proxyCmd = exec.Command("/usr/bin/tinyproxy", "-d", "-c", configFile)
 
 	proxyCmd.Stdout = utils.GetLogFile()
 	proxyCmd.Stderr = utils.GetLogFile()
 
-	err := proxyCmd.Start()
+	err = proxyCmd.Start()
 	if err != nil {
-		utils.LogLn(err)
+		utils.LogError("Error starting Http Proxy", err)
 	} else {
 		utils.LogLn("Http Proxy started with pid", proxyCmd.Process.Pid)
 		os.WriteFile(pidFile, []byte(strconv.Itoa(proxyCmd.Process.Pid)), 0644)
@@ -34,6 +39,7 @@ func startProxy() {
 }
 
 func stopProxy() {
+	utils.LogLn("Stopping Http Proxy")
 	utils.RunCommand("/usr/bin/pkill", "-15", "tinyproxy")
 	// proxyCmd.Wait()
 }

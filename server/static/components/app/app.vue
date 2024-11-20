@@ -155,7 +155,7 @@
                 </div>
               </form>
               <div class="mt-4 buttons">
-                <button class="button is-info mx-auto" @click="refreshInfo">Reset</button>
+                <button class="button is-info mx-auto" @click="refreshInfo(false)">Reset</button>
                 <button class="button is-success mx-auto" @click="saveConfig" :disabled="!isModified">Save</button>
               </div>
             </div>
@@ -169,7 +169,7 @@
                 <div class="level-right">
                   <div class="buttons">
                     <div class="tooltip">
-                      <button class="button is-small is-light" @click="refreshInfo">
+                      <button class="button is-small is-light" @click="refreshInfo(true)">
                         <span class="icon">
                           <i class="fas fa-sync-alt"></i>
                         </span>
@@ -326,8 +326,8 @@ export default {
     'file-browser-viewer': Vue.defineAsyncComponent(() => ComponentLoader.import('core/file-browser-viewer')),
   },
   methods: {
-    async refreshInfo() {
-      var status = await fetch('/api/status').then(response => response.json());
+    async refreshInfo(force) {
+      var status = await fetch(`/api/status?force=${force}`).then(response => response.json());
 
       // console.log(status);
 
@@ -363,7 +363,7 @@ export default {
         method: 'POST',
       }).then(() => {
         setTimeout(() => {
-          this.refreshInfo();
+          this.refreshInfo(false);
         }, REFRESH_TIME);
       });
     },
@@ -420,7 +420,7 @@ export default {
         }
       }
       setTimeout(() => {
-        this.refreshInfo();
+        this.refreshInfo(false);
       }, REFRESH_TIME);
     },
   },
@@ -466,7 +466,7 @@ export default {
     }
   },
   mounted() {
-    this.refreshInfo();
+    this.refreshInfo(false);
   }
 }
 </script>

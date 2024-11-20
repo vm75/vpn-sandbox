@@ -66,7 +66,7 @@ func main() {
 
 	if appMode == core.OpenVPNAction {
 		utils.InitLog(filepath.Join(core.VarDir, "vpn-"+scriptType+".log"))
-		utils.LogF("Running openvpn action %s", scriptType)
+		utils.LogF("Running openvpn action %s\n", scriptType)
 		switch scriptType {
 		case "up":
 			utils.LogLn("Saving openvpn spec file")
