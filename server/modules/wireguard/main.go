@@ -42,10 +42,10 @@ func InitModule() {
 // RegisterRoutes implements core.Module.
 func (w *WireguardModule) RegisterRoutes(r *mux.Router) {
 	// Template-related routes
-	r.HandleFunc("/api/wireguard/servers", listServers).Methods("GET")
-	r.HandleFunc("/api/wireguard/servers/{name}", getServer).Methods("GET")
-	r.HandleFunc("/api/wireguard/servers/save", saveServer).Methods("POST")
-	r.HandleFunc("/api/wireguard/servers/delete/{name}", deleteServer).Methods("DELETE")
+	r.HandleFunc("/api/wireguard/servers", listServersHandler).Methods("GET")
+	r.HandleFunc("/api/wireguard/servers/{name}", getServerHandler).Methods("GET")
+	r.HandleFunc("/api/wireguard/servers/save", saveServerHandler).Methods("POST")
+	r.HandleFunc("/api/wireguard/servers/delete/{name}", deleteServerHandler).Methods("DELETE")
 }
 
 // IsRunning implements core.Module.

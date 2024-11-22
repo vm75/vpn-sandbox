@@ -98,13 +98,13 @@ func VpnUp(netSpec *NetSpec) {
 
 	// Set routes
 	// Remove all existing default routes
-	utils.RunCommand("/sbin/ip", "route", "del", "default")
+	utils.RunCommand(false, "/sbin/ip", "route", "del", "default")
 
 	// Default route for all traffic through the VPN tunnel
 	if netSpec.VPNGateway == "" {
-		utils.RunCommand("/sbin/ip", "route", "add", "default", "dev", netSpec.Dev)
+		utils.RunCommand(false, "/sbin/ip", "route", "add", "default", "dev", netSpec.Dev)
 	} else {
-		utils.RunCommand("/sbin/ip", "route", "add", "default", "via", netSpec.VPNGateway, "dev", netSpec.Dev)
+		utils.RunCommand(false, "/sbin/ip", "route", "add", "default", "via", netSpec.VPNGateway, "dev", netSpec.Dev)
 	}
 
 	if netSpec.VpnEndpoint != "" {
@@ -112,20 +112,20 @@ func VpnUp(netSpec *NetSpec) {
 		hostGateway := utils.GetHostGateway()
 		utils.LogLn("host gateway: " + hostGateway)
 
-		utils.RunCommand("/sbin/ip", "route", "add", netSpec.VpnEndpoint, "via", hostGateway)
+		utils.RunCommand(false, "/sbin/ip", "route", "add", netSpec.VpnEndpoint, "via", hostGateway)
 	}
 
 	// Set firewall rules
 	// Flush existing rules to start fresh
-	utils.RunCommand("/sbin/iptables", "-F")
+	utils.RunCommand(false, "/sbin/iptables", "-F")
 
 	// Allow incoming ESTABLISHED and RELATED connections on the VPN interface
-	utils.RunCommand("/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT")
+	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT")
 
 	// Drop all other incoming connections on the VPN interface
-	utils.RunCommand("/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-j", "DROP")
+	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-j", "DROP")
 
 	// Trigger vpn-up actions
 	utils.PublishEvent(utils.Event{Name: "vpn-up", Context: map[string]interface{}{"dev": netSpec.Dev}})
-	utils.RunCommand(core.AppScript, "up")
+	utils.RunCommand(false, core.AppScript, "up")
 }

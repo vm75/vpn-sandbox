@@ -47,9 +47,10 @@ func main() {
 		utils.LogFatal(err)
 	}
 
-	params, args := utils.SmartArgs("--data|-d=/data:,--port|-p=80:,--test", os.Args[1:])
+	params, args := utils.SmartArgs("--data|-d=/data:,--port|-p=80:,--test,--sudo", os.Args[1:])
 	dataDir := params["--data"].GetValue()
 	core.Testing = params["--test"].IsSet()
+	utils.UseSudo = params["--sudo"].IsSet()
 
 	// detect if this is an openvpn action
 	scriptType := os.Getenv("script_type")

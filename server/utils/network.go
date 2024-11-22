@@ -26,7 +26,7 @@ func GetDefaultGateway() (string, error) {
 func BackupResolvConf() {
 	if !FileExists(ResolvConfBackup) {
 		// copy exising resolv.conf to resolv.conf.bak
-		err := RunCommand("/bin/cp", "/etc/resolv.conf", ResolvConfBackup)
+		_, err := RunCommand(false, "/bin/cp", "/etc/resolv.conf", ResolvConfBackup)
 		if !FileExists(ResolvConfBackup) {
 			LogError("Error creating "+ResolvConfBackup, err)
 		}

@@ -2,7 +2,7 @@
   <div class="columns is-gapless file-explorer">
     <!-- Left Pane: File Explorer -->
     <div class="column is-3">
-      <div class="box" style="height: 30vh; overflow-y: auto;">
+      <div class="box" style="height: 30em; overflow-y: auto;">
         <nav class="panel">
           <div class="panel-block">
             <ul>
@@ -22,7 +22,7 @@
 
     <!-- Right Pane: File Viewer -->
     <div class="column is-9">
-      <div class="box" style="height: 30vh; overflow-y: auto;">
+      <div class="box" style="height: 30em; overflow-y: auto;">
         <div v-if="loading" class="has-text-centered">
           <p>Loading...</p>
         </div>

@@ -51,7 +51,7 @@ func InitModule(proxyType ProxyType) {
 			proxyType:   SocksProxy,
 			displayName: "SOCKS Proxy",
 			execName:    "sockd",
-			proxyCmd:    []string{"/usr/local/sbin/sockd", "-f", configFile},
+			proxyCmd:    []string{"/usr/bin/sockd", "-f", configFile},
 			configFile:  configFile,
 			pidFile:     filepath.Join(core.VarDir, "sockd.pid"),
 			cmdObject:   nil,

@@ -23,25 +23,25 @@ func VpnDown() {
 
 	// Set routes
 	// Remove all existing default routes
-	utils.RunCommand("/sbin/ip", "route", "del", "default")
+	utils.RunCommand(false, "/sbin/ip", "route", "del", "default")
 
 	// Add default gateway
-	utils.RunCommand("/sbin/ip", "route", "add", "default", "via", hostGateway, "dev", "eth0")
+	utils.RunCommand(false, "/sbin/ip", "route", "add", "default", "via", hostGateway, "dev", "eth0")
 
 	// Set firewall rules
 	// Flush existing rules to start fresh
-	utils.RunCommand("/sbin/iptables", "-F")
+	utils.RunCommand(false, "/sbin/iptables", "-F")
 
 	// Allow related and established connections (for existing sessions to work)
-	utils.RunCommand("/sbin/iptables", "-A", "INPUT", "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT")
+	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT")
 
 	// Allow incoming connections only on port 80
-	utils.RunCommand("/sbin/iptables", "-A", "INPUT", "-p", "tcp", "--dport", "80", "-j", "ACCEPT")
+	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-p", "tcp", "--dport", "80", "-j", "ACCEPT")
 
 	// Drop all other incoming connections
-	utils.RunCommand("/sbin/iptables", "-A", "INPUT", "-j", "DROP")
+	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-j", "DROP")
 
 	// Trigger vpn down actions
 	utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
-	utils.RunCommand(core.AppScript, "down")
+	utils.RunCommand(false, core.AppScript, "down")
 }

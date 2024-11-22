@@ -97,7 +97,7 @@ run_openvpn() {
     --auth-nocache \
     --verb ${VPN_LOG_LEVEL:-3} \
     --log ${VAR_DIR}/openvpn.log \
-    --status ${VAR_DIR}/openvpn.status ${RETRY_INTERVAL} \
+    --status ${VAR_DIR}/openvpn.status 60 \
     --ping-restart ${RETRY_INTERVAL} \
     --connect-retry-max 3 \
     --script-security 2 \
@@ -204,6 +204,9 @@ main() {
       ;;
     serve)
       server
+      ;;
+    ports)
+      netstat -tulpn | grep LISTEN
       ;;
     *)
       echo "Unknown command: $1"

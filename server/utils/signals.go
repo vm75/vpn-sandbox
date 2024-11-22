@@ -54,5 +54,6 @@ func SignalProcess(pid int, signal os.Signal) error {
 	if sigStr == "" {
 		return errors.New("invalid signal")
 	}
-	return RunCommand("/bin/kill", "-"+sigStr[7:], strconv.Itoa(pid))
+	_, err := RunCommand(UseSudo, "/bin/kill", "-"+sigStr[7:], strconv.Itoa(pid))
+	return err
 }

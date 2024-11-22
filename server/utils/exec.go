@@ -8,22 +8,49 @@ import (
 	"syscall"
 )
 
-func RunCommand(command string, args ...string) error {
-	LogLn(fmt.Sprintf("Executing: %s %s", command, strings.Join(args, " ")))
+var UseSudo bool
+
+func RunCommand(isElevated bool, command string, args ...string) (string, error) {
+	if isElevated {
+		args = append([]string{command}, args...)
+		command = "sudo"
+	}
+
+	LogLn(fmt.Sprintf("Running: %s %s", command, strings.Join(args, " ")))
 
 	cmd := exec.Command(command, args...)
 	// cmd.Env = append(os.Environ(), "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+	cmd.Stderr = logFile
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true, // Create a new process group
+	}
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), err
+}
+
+func StartCommand(isElevated bool, command string, args ...string) (*exec.Cmd, error) {
+	if isElevated {
+		args = append([]string{command}, args...)
+		command = "sudo"
+	}
+
+	LogLn(fmt.Sprintf("Starting: %s %s", command, strings.Join(args, " ")))
+
+	cmd := exec.Command(command, args...)
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true, // Create a new process group
 	}
-	err := cmd.Run()
+	err := cmd.Start()
 	if err != nil {
-		LogLn(logFile, err)
+		return nil, err
 	}
-
-	return err
+	return cmd, nil
 }
 
 func IsRunning(cmdObject *exec.Cmd) bool {

@@ -1,7 +1,10 @@
 package openvpn
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
+	"time"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 
@@ -23,13 +26,14 @@ var openvpnConfig = OpenVPNModule{
 	ServerName:     "",
 	ServerEndpoint: "",
 	LogLevel:       0,
-	RetryInterval:  3600,
+	RetryInterval:  300,
 }
 var configFile = ""
 var authFile = ""
 var pidFile = ""
 var logFile = ""
 var statusFile = ""
+var statusUpdateInterval = 60 * time.Second
 
 func InitModule() {
 	initDb()
@@ -58,15 +62,41 @@ func InitModule() {
 // RegisterRoutes implements core.Module.
 func (o *OpenVPNModule) RegisterRoutes(r *mux.Router) {
 	// Template-related routes
-	r.HandleFunc("/api/openvpn/servers", listServers).Methods("GET")
-	r.HandleFunc("/api/openvpn/servers/{name}", getServer).Methods("GET")
-	r.HandleFunc("/api/openvpn/servers/save", saveServer).Methods("POST")
-	r.HandleFunc("/api/openvpn/servers/delete/{name}", deleteServer).Methods("DELETE")
+	r.HandleFunc("/api/openvpn/servers", listServersHandler).Methods("GET")
+	r.HandleFunc("/api/openvpn/servers/{name}", getServerHandler).Methods("GET")
+	r.HandleFunc("/api/openvpn/servers/save", saveServerHandler).Methods("POST")
+	r.HandleFunc("/api/openvpn/servers/delete/{name}", deleteServerHandler).Methods("DELETE")
 }
 
 // IsRunning implements core.Module.
 func (o *OpenVPNModule) IsRunning() bool {
-	return utils.IsRunning(openvpnCmd)
+	out, err := utils.RunCommand(utils.UseSudo, "/sbin/ip", "a", "show", "dev", "tun0")
+	if err != nil || strings.Contains(out, "state DOWN") {
+		return false
+	}
+
+	// Read the statusfile
+	content, err := os.ReadFile(statusFile)
+	if err != nil {
+		return false
+	}
+
+	// Variable to hold the last updated time
+	var updatedTimeStr string
+	for _, line := range strings.Split(string(content), "\n") {
+		if strings.HasPrefix(line, "Updated,") {
+			updatedTimeStr = strings.TrimPrefix(line, "Updated,")
+			break
+		}
+	}
+
+	// Parse the updated time
+	updatedTime, err := time.Parse("2006-01-02 15:04:05", updatedTimeStr)
+	if err != nil {
+		return false
+	}
+
+	return time.Since(updatedTime) <= statusUpdateInterval
 }
 
 // Enable implements core.Module.

@@ -15,8 +15,11 @@ import (
 
 type IpInfo map[string]interface{}
 
-var staticDir = "./static"
-var ipInfo = IpInfo{}
+var (
+	staticDir        = "./static"
+	ipInfo           = IpInfo{}
+	nwChangedChannel = make(chan string) // Channel for sending status updates
+)
 
 type ModuleStatus struct {
 	Running bool                   `json:"running"`
@@ -34,7 +37,7 @@ func queryParams(r *http.Request) map[string]string {
 	return params
 }
 
-func getStatus(w http.ResponseWriter, r *http.Request) {
+func getStatus() map[string]interface{} {
 	globalConfig, _ := core.GetGlobalConfig()
 	status := make(map[string]interface{})
 	status["global"] = map[string]interface{}{
@@ -48,15 +51,45 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		status[name] = moduleStatus
 	}
 
-	if r.URL.Query().Get("force") == "true" {
-		utils.GetIpInfo(ipInfo)
-	}
+	utils.GetIpInfo(ipInfo)
 	status["ipInfo"] = ipInfo
 
-	json.NewEncoder(w).Encode(status)
+	return status
 }
 
-func getGlobalConfig(w http.ResponseWriter, r *http.Request) {
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	// Set SSE headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// Create a channel to close the connection on client disconnect
+	clientGone := r.Context().Done()
+
+	data, _ := json.Marshal(getStatus())
+	fmt.Fprintf(w, "data: %s\n\n", data)
+	w.(http.Flusher).Flush() // Ensure data is sent immediately
+
+	for {
+		select {
+		case event := <-nwChangedChannel: // Receive new status from the channel
+			utils.LogLn("Received event:", event)
+			data, _ := json.Marshal(getStatus())
+			fmt.Fprintf(w, "data: %s\n\n", data)
+			w.(http.Flusher).Flush() // Ensure data is sent immediately
+		case <-clientGone: // Client disconnected
+			return
+		}
+	}
+}
+
+func forceRefreshHandler(w http.ResponseWriter, _ *http.Request) {
+	nwChangedChannel <- "force"
+	w.WriteHeader(http.StatusOK)
+}
+
+func getGlobalConfigHandler(w http.ResponseWriter, r *http.Request) {
 	config, err := core.GetGlobalConfig()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -64,7 +97,7 @@ func getGlobalConfig(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(config)
 }
 
-func saveGlobalConfig(w http.ResponseWriter, r *http.Request) {
+func saveGlobalConfigHandler(w http.ResponseWriter, r *http.Request) {
 	var config map[string]interface{}
 	err := json.NewDecoder(r.Body).Decode(&config)
 	if err != nil {
@@ -81,7 +114,7 @@ func saveGlobalConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get Module status
-func getModuleStatus(w http.ResponseWriter, r *http.Request) {
+func getModuleStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	module := vars["module"]
 
@@ -97,7 +130,7 @@ func getModuleStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 // Enable Module
-func enableModule(w http.ResponseWriter, r *http.Request) {
+func enableModuleHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	module := vars["module"]
 
@@ -111,7 +144,7 @@ func enableModule(w http.ResponseWriter, r *http.Request) {
 }
 
 // Disable Module
-func disableModule(w http.ResponseWriter, r *http.Request) {
+func disableModuleHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	module := vars["module"]
 
@@ -125,7 +158,7 @@ func disableModule(w http.ResponseWriter, r *http.Request) {
 }
 
 // Restart Module
-func restartModule(w http.ResponseWriter, r *http.Request) {
+func restartModuleHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	module := vars["module"]
 
@@ -136,7 +169,7 @@ func restartModule(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getModuleConfig(w http.ResponseWriter, r *http.Request) {
+func getModuleConfigHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	module := vars["module"]
 
@@ -149,7 +182,7 @@ func getModuleConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 // Save a config (new or existing)
-func saveModuleConfig(w http.ResponseWriter, r *http.Request) {
+func saveModuleConfigHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	module := vars["module"]
 
@@ -183,7 +216,7 @@ func sanitizePath(inputPath string) string {
 	return filepath.Join(core.VarDir, cleanPath)
 }
 
-func listFiles(w http.ResponseWriter, r *http.Request) {
+func listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	relPath := r.URL.Query().Get("path")
 	absPath := sanitizePath(relPath)
 
@@ -209,7 +242,7 @@ func listFiles(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(fileInfos)
 }
 
-func fileContent(w http.ResponseWriter, r *http.Request) {
+func fileContentHandler(w http.ResponseWriter, r *http.Request) {
 	relPath := r.URL.Query().Get("path")
 	absPath := sanitizePath(relPath)
 
@@ -237,10 +270,13 @@ func handleStaticFiles(r *mux.Router) {
 	r.PathPrefix("/").Handler(http.StripPrefix("/", fs)) // Serve "/" from staticDir
 }
 
+func (i *IpInfo) HandleEvent(event utils.Event) {
+	nwChangedChannel <- event.Name
+	// go utils.GetIpInfo(*i)
+}
+
 func WebServer(port string) {
-	utils.AddSignalHandler([]os.Signal{core.VPN_UP, core.VPN_DOWN}, func(_ os.Signal) {
-		go utils.GetIpInfo(ipInfo)
-	})
+	utils.RegisterListener([]string{"vpn-up", "vpn-down"}, &ipInfo)
 
 	go utils.GetIpInfo(ipInfo)
 
@@ -248,21 +284,22 @@ func WebServer(port string) {
 	r := mux.NewRouter()
 
 	// Config-related routes
-	r.HandleFunc("/api/status", getStatus).Methods("GET")
-	r.HandleFunc("/api/config", getGlobalConfig).Methods("GET")
-	r.HandleFunc("/api/config/save", saveGlobalConfig).Methods("POST")
+	r.HandleFunc("/api/status", statusHandler).Methods("GET")
+	r.HandleFunc("/api/force-refresh", forceRefreshHandler).Methods("GET")
+	r.HandleFunc("/api/config", getGlobalConfigHandler).Methods("GET")
+	r.HandleFunc("/api/config/save", saveGlobalConfigHandler).Methods("POST")
 
 	// Handle file
-	r.HandleFunc("/api/files", listFiles)
-	r.HandleFunc("/api/file", fileContent)
+	r.HandleFunc("/api/files", listFilesHandler)
+	r.HandleFunc("/api/file", fileContentHandler)
 
 	// Module
-	r.HandleFunc("/api/{module}/status", getModuleStatus).Methods("GET")
-	r.HandleFunc("/api/{module}/enable", enableModule).Methods("POST")
-	r.HandleFunc("/api/{module}/disable", disableModule).Methods("POST")
-	r.HandleFunc("/api/{module}/restart", restartModule).Methods("POST")
-	r.HandleFunc("/api/{module}/config", getModuleConfig).Methods("GET")
-	r.HandleFunc("/api/{module}/config/save", saveModuleConfig).Methods("POST")
+	r.HandleFunc("/api/{module}/status", getModuleStatusHandler).Methods("GET")
+	r.HandleFunc("/api/{module}/enable", enableModuleHandler).Methods("POST")
+	r.HandleFunc("/api/{module}/disable", disableModuleHandler).Methods("POST")
+	r.HandleFunc("/api/{module}/restart", restartModuleHandler).Methods("POST")
+	r.HandleFunc("/api/{module}/config", getModuleConfigHandler).Methods("GET")
+	r.HandleFunc("/api/{module}/config/save", saveModuleConfigHandler).Methods("POST")
 
 	// Custom module routes
 	for _, module := range core.GetModules() {

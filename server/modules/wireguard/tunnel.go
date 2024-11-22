@@ -4,19 +4,16 @@ import (
 	"errors"
 	"net"
 	"os"
-	"os/exec"
 	"strings"
 	"vpn-sandbox/actions"
-	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 )
 
 func isTunnelUp() bool {
-	cmd := exec.Command("/sbin/ip", "link", "show", "dev", "wg0")
-	resp, err := cmd.CombinedOutput()
+	out, err := utils.RunCommand(utils.UseSudo, "/usr/bin/wg", "show", "wg0")
 
-	if err == nil {
-		return !strings.Contains(string(resp), "state DOWN")
+	if strings.Contains(out, "peer: ") && err == nil {
+		return true
 	}
 
 	return false
@@ -85,12 +82,13 @@ func tunnelUp() error {
 	address := findValue(wgConfig, "Address", vpnAddress)
 	allowedIps := findValue(wgConfig, "AllowedIPs", "0.0.0.0/0")
 
-	utils.RunCommand("/sbin/ip", "link", "add", "dev", "wg0", "type", "wireguard")
+	utils.RunCommand(utils.UseSudo, "/sbin/ip", "link", "add", "dev", "wg0", "type", "wireguard")
 
 	// save private key to /tmp/wg0.key
 	os.WriteFile("/tmp/wg0.key", []byte(privateKey), 0644)
 
-	utils.RunCommand("/usr/bin/wg", "set", "wg0",
+	utils.RunCommand(utils.UseSudo,
+		"/usr/bin/wg", "set", "wg0",
 		"private-key", "/tmp/wg0.key",
 		"peer", peerPublicKey,
 		"endpoint", endpoint,
@@ -99,15 +97,13 @@ func tunnelUp() error {
 	// clean up private key
 	os.Remove("/tmp/wg0.key")
 
-	utils.RunCommand("/sbin/ip", "address", "add", address, "dev", "wg0")
-	utils.RunCommand("/sbin/ip", "link", "set", "up", "dev", "wg0")
+	utils.RunCommand(utils.UseSudo, "/sbin/ip", "address", "add", address, "dev", "wg0")
+	utils.RunCommand(utils.UseSudo, "/sbin/ip", "link", "set", "up", "dev", "wg0")
 
 	if !isTunnelUp() {
 		utils.LogLn("Tunnel up failed")
 		return nil
 	}
-
-	utils.SignalRunning(core.ServerPidFile, core.VPN_UP)
 
 	actions.VpnUp(&actions.NetSpec{
 		Dev:         "wg0",
@@ -121,14 +117,12 @@ func tunnelUp() error {
 }
 
 func tunnelDown() error {
-	utils.RunCommand("/sbin/ip", "link", "set", "down", "dev", "wg0")
-	utils.RunCommand("/sbin/ip", "link", "del", "dev", "wg0")
+	utils.RunCommand(utils.UseSudo, "/sbin/ip", "link", "set", "down", "dev", "wg0")
+	utils.RunCommand(utils.UseSudo, "/sbin/ip", "link", "del", "dev", "wg0")
 
 	if isTunnelUp() {
 		utils.LogLn("Tunnel down failed")
 	}
-
-	utils.SignalRunning(core.ServerPidFile, core.VPN_DOWN)
 
 	actions.VpnDown()
 

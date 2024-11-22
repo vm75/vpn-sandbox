@@ -41,7 +41,7 @@ func startProxy(p *ProxyModule) {
 
 func stopProxy(p *ProxyModule) {
 	utils.LogF("Stopping %s\n", p.displayName)
-	utils.RunCommand("/usr/bin/pkill", "-15", p.execName)
+	utils.RunCommand(utils.UseSudo, "/usr/bin/pkill", "-15", p.execName)
 	p.cmdObject = nil
 	// proxyCmd.Wait()
 }

@@ -13,7 +13,7 @@
       <div class="tabs is-boxed">
         <ul>
           <li :class="{ 'is-active': currentTab === 'config' }">
-            <a @click="currentTab = 'config'">Sandbox Config</a>
+            <a @click="currentTab = 'config'">Dashboard</a>
           </li>
           <li :class="{ 'is-active': currentTab === 'OpenVPN' }">
             <a @click="currentTab = 'OpenVPN'">OpenVPN Servers</a>
@@ -27,7 +27,7 @@
         </ul>
       </div>
 
-      <!-- Sandbox Config -->
+      <!-- Dashboard -->
       <div v-if="currentTab === 'config'">
         <div class="columns">
           <div class="container column">
@@ -155,7 +155,7 @@
                 </div>
               </form>
               <div class="mt-4 buttons">
-                <button class="button is-info mx-auto" @click="refreshInfo(false)">Reset</button>
+                <button class="button is-info mx-auto" @click="forceRefresh">Reset</button>
                 <button class="button is-success mx-auto" @click="saveConfig" :disabled="!isModified">Save</button>
               </div>
             </div>
@@ -169,7 +169,7 @@
                 <div class="level-right">
                   <div class="buttons">
                     <div class="tooltip">
-                      <button class="button is-small is-light" @click="refreshInfo(true)">
+                      <button class="button is-small is-light" @click="forceRefresh">
                         <span class="icon">
                           <i class="fas fa-sync-alt"></i>
                         </span>
@@ -326,9 +326,7 @@ export default {
     'file-explorer': Vue.defineAsyncComponent(() => ComponentLoader.import('core/file-explorer')),
   },
   methods: {
-    async refreshInfo(force) {
-      var status = await fetch(`/api/status?force=${force}`).then(response => response.json());
-
+    updateStatus(status) {
       console.log(status);
 
       this.global.config = status.global.config;
@@ -355,16 +353,15 @@ export default {
 
       this.ipInfo = status.ipInfo;
     },
+    async forceRefresh() {
+      fetch(`/api/force-refresh`);
+    },
     toggleModule: function (module) {
       this[module].config.enabled = !this[module].config.enabled;
       var cmd = this[module].config.enabled ? 'enable' : 'disable';
       var now = this[module].config.enabled ? 'start' : 'stop';
       fetch(`/api/${module}/${cmd}?${now}=true`, {
         method: 'POST',
-      }).then(() => {
-        setTimeout(() => {
-          this.refreshInfo(false);
-        }, REFRESH_TIME);
       });
     },
     setModified: function (event) {
@@ -393,6 +390,16 @@ export default {
     },
     saveConfig: async function () {
       var configTypes = ['global', 'openvpn', 'wireguard'];
+      var orgType = this.global.vpnType.toLowerCase();
+      var newType = this.global.config.vpnType.toLowerCase();
+      var vpnEnabled = this[orgType].config.enabled;
+      var vpnTypeChanged = this.global.vpnType !== this.global.config.vpnType;
+
+      if (vpnTypeChanged) {
+        await fetch(`/api/${orgType}/disable?stop=true`, {
+          method: 'POST',
+        });
+      }
 
       for (var configType of configTypes) {
         if (this[configType].modified) {
@@ -406,22 +413,12 @@ export default {
           this[configType].modified = false;
         }
       }
-      if (this.global.vpnType !== this.global.config.vpnType) {
-        var orgType = this.global.vpnType.toLowerCase();
-        var newType = this.global.config.vpnType.toLowerCase();
-        var vpnEnabled = this[orgType].config.enabled;
-        if (vpnEnabled) {
-          await fetch(`/api/${orgType}/disable?stop=true`, {
-            method: 'POST',
-          });
-          await fetch(`/api/${newType}/enable?start=true`, {
-            method: 'POST',
-          });
-        }
+
+      if (vpnEnabled) {
+        await fetch(`/api/${newType}/enable?start=true`, {
+          method: 'POST',
+        });
       }
-      setTimeout(() => {
-        this.refreshInfo(false);
-      }, REFRESH_TIME);
     },
   },
   computed: {
@@ -466,7 +463,26 @@ export default {
     }
   },
   mounted() {
-    this.refreshInfo(false);
+    const eventSource = new EventSource("api/status");
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Received update:", data);
+        this.updateStatus(data);
+      } catch (error) {
+        console.error("Error parsing event data:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("SSE connection error:", error);
+      // Optionally close the EventSource on error
+      eventSource.close();
+    };
+
+    // Save the EventSource instance if you want to close it later
+    this.eventSource = eventSource;
   }
 }
 </script>

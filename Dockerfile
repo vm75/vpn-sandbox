@@ -43,7 +43,7 @@ LABEL version="$IMAGE_VERSION"
 LABEL created="$BUILD_DATE"
 
 # Copy binaries from build stage
-COPY --from=build /usr/local/sbin/sockd /usr/local/sbin/sockd
+COPY --from=build /usr/local/sbin/sockd /usr/bin/sockd
 COPY --from=build /workdir/vpn-sandbox /opt/vpn-sandbox/vpn-sandbox
 
 # Copy the server code

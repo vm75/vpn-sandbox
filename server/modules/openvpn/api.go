@@ -8,13 +8,13 @@ import (
 )
 
 // List all servers
-func listServers(w http.ResponseWriter, r *http.Request) {
+func listServersHandler(w http.ResponseWriter, r *http.Request) {
 	var servers = getOpenVPNServers()
 	json.NewEncoder(w).Encode(servers)
 }
 
 // Get a single server
-func getServer(w http.ResponseWriter, r *http.Request) {
+func getServerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 	server := getOpenVPNServer(name)
@@ -26,7 +26,7 @@ func getServer(w http.ResponseWriter, r *http.Request) {
 }
 
 // Create or update a server
-func saveServer(w http.ResponseWriter, r *http.Request) {
+func saveServerHandler(w http.ResponseWriter, r *http.Request) {
 	var svr Server
 	_ = json.NewDecoder(r.Body).Decode(&svr)
 
@@ -39,7 +39,7 @@ func saveServer(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete a template
-func deleteServer(w http.ResponseWriter, r *http.Request) {
+func deleteServerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 	err := DeleteServer(name)

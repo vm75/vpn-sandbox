@@ -35,7 +35,7 @@ func runOpenVPN() {
 		retryInterval := strconv.Itoa(openvpnConfig.RetryInterval)
 
 		utils.LogLn("Starting OpenVPN")
-		var cmd []string = []string{
+		openvpnCmd, err := utils.StartCommand(utils.UseSudo,
 			"openvpn",
 			"--client",
 			"--cd", core.VarDir,
@@ -44,7 +44,7 @@ func runOpenVPN() {
 			"--auth-nocache",
 			"--verb", strconv.Itoa(openvpnConfig.LogLevel),
 			"--log", logFile,
-			"--status", statusFile, retryInterval,
+			"--status", statusFile, strconv.Itoa(int(statusUpdateInterval.Seconds())),
 			"--ping-restart", retryInterval,
 			"--connect-retry-max", "3",
 			"--script-security", "2",
@@ -58,19 +58,8 @@ func runOpenVPN() {
 			"--remote-cert-tls", "server",
 			"--data-ciphers", dataCiphers,
 			"--writepid", pidFile,
-		}
-		if core.Testing {
-			cmd = append([]string{"sudo"}, cmd...)
-		}
-		openvpnCmd = exec.Command(
-			cmd[0],
-			cmd[1:]...,
 		)
 
-		openvpnCmd.Stdout = utils.GetLogFile()
-		openvpnCmd.Stderr = utils.GetLogFile()
-
-		err := openvpnCmd.Start()
 		if err != nil {
 			utils.LogLn(err)
 			sleepFor := max(openvpnConfig.RetryInterval, 60)
@@ -90,14 +79,7 @@ func runOpenVPN() {
 }
 
 func killOpenVPN() {
-	var cmd []string = []string{
-		"/usr/bin/pkill", "-15", "-x", "openvpn",
-	}
-	if core.Testing {
-		cmd = append([]string{"sudo"}, cmd...)
-	}
-
-	utils.RunCommand(cmd[0], cmd[1:]...)
+	utils.RunCommand(utils.UseSudo, "/usr/bin/pkill", "-15", "-x", "openvpn")
 	// openvpnCmd.Wait()
 }
 
