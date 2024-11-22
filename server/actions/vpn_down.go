@@ -6,9 +6,10 @@ import (
 )
 
 func VpnDown() {
-	utils.LogLn("vpn down")
+	utils.LogLn("VpnDown: Entry")
 
 	// restore resolv.conf
+	utils.LogLn("Restoring resolv.conf")
 	utils.RestoreResolvConf()
 
 	// get host gateway from resolv.conf
@@ -21,7 +22,9 @@ func VpnDown() {
 		return
 	}
 
-	// Set routes
+	// restore routes
+	utils.LogLn("Restoring routes")
+
 	// Remove all existing default routes
 	utils.RunCommand(false, "/sbin/ip", "route", "del", "default")
 
@@ -42,6 +45,10 @@ func VpnDown() {
 	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-j", "DROP")
 
 	// Trigger vpn down actions
+	utils.LogLn("Triggering vpn down actions")
 	utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
+
+	// Run app script
+	utils.LogLn("Stopping app script")
 	utils.RunCommand(false, core.AppScript, "down")
 }

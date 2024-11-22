@@ -63,7 +63,7 @@ func RetrieveOpenVPNSpec() (*NetSpec, error) {
 }
 
 func VpnUp(netSpec *NetSpec) {
-	utils.LogLn("vpn up")
+	utils.LogLn("VpnUp: Entry")
 
 	if netSpec == nil {
 		var err error
@@ -92,11 +92,14 @@ func VpnUp(netSpec *NetSpec) {
 	}
 
 	// write resolv.conf
+	utils.LogLn("Generating resolv.conf")
 	if err := os.WriteFile("/etc/resolv.conf", []byte(sb.String()), 0644); err != nil {
 		utils.LogError("Error updating /etc/resolv.conf", err)
 	}
 
-	// Set routes
+	// set routes
+	utils.LogLn("Setting routes")
+
 	// Remove all existing default routes
 	utils.RunCommand(false, "/sbin/ip", "route", "del", "default")
 
@@ -126,6 +129,10 @@ func VpnUp(netSpec *NetSpec) {
 	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-j", "DROP")
 
 	// Trigger vpn-up actions
+	utils.LogLn("Triggering vpn-up actions")
 	utils.PublishEvent(utils.Event{Name: "vpn-up", Context: map[string]interface{}{"dev": netSpec.Dev}})
+
+	// Trigger apps script
+	utils.LogLn("Starting apps script")
 	utils.RunCommand(false, core.AppScript, "up")
 }

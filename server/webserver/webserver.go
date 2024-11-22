@@ -310,7 +310,7 @@ func WebServer(port string) {
 	handleStaticFiles(r)
 
 	// Start the server
-	fmt.Printf("Server starting on port %s\n", port)
+	utils.LogF("Server starting on port %s\n", port)
 	err := http.ListenAndServe(":"+port, r)
 	if err != nil {
 		utils.LogFatal(err)

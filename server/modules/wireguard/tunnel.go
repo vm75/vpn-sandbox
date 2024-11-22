@@ -109,7 +109,7 @@ func tunnelUp() error {
 		return nil
 	}
 
-	actions.VpnUp(&actions.NetSpec{
+	go actions.VpnUp(&actions.NetSpec{
 		Dev:         "wg0",
 		Domains:     []string{},
 		DNS:         strings.Fields(strings.ReplaceAll(DNS, ",", " ")),

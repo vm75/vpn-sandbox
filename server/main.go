@@ -94,6 +94,8 @@ func main() {
 		}
 	})
 
+	// One-time setup
+	utils.LogLn("Running one-time setup")
 	oneTimeSetup()
 
 	// Disable all connectivity
