@@ -28,12 +28,14 @@ func startProxy(p *ProxyModule) {
 	p.cmdObject.Stderr = utils.GetLogFile()
 
 	err = p.cmdObject.Start()
+	utils.PublishEvent(utils.Event{Name: "proxy-up", Context: map[string]interface{}{}})
 	if err != nil {
 		utils.LogError("Error starting "+p.displayName, err)
 	} else {
 		utils.LogF("%s started with pid %d\n", p.displayName, p.cmdObject.Process.Pid)
 		os.WriteFile(p.pidFile, []byte(strconv.Itoa(p.cmdObject.Process.Pid)), 0644)
 		status := p.cmdObject.Wait()
+		utils.PublishEvent(utils.Event{Name: "proxy-down", Context: map[string]interface{}{}})
 		os.Remove(p.pidFile)
 		utils.LogF("%s exited with status: %v\n", p.displayName, status)
 	}

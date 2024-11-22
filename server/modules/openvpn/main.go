@@ -70,6 +70,10 @@ func (o *OpenVPNModule) RegisterRoutes(r *mux.Router) {
 
 // IsRunning implements core.Module.
 func (o *OpenVPNModule) IsRunning() bool {
+	if _, err := os.Stat("/sys/class/net/tun0"); os.IsNotExist(err) {
+		return false
+	}
+
 	out, err := utils.RunCommand(utils.UseSudo, "/sbin/ip", "a", "show", "dev", "tun0")
 	if err != nil || strings.Contains(out, "state DOWN") {
 		return false

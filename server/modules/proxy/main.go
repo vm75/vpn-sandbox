@@ -23,6 +23,7 @@ type ProxyModule struct {
 	configFile  string
 	pidFile     string
 	cmdObject   *exec.Cmd
+	isRunning   bool
 }
 
 func InitModule(proxyType ProxyType) {
@@ -41,6 +42,7 @@ func InitModule(proxyType ProxyType) {
 			configFile:  configFile,
 			pidFile:     filepath.Join(core.VarDir, "tinyproxy.pid"),
 			cmdObject:   nil,
+			isRunning:   false,
 		}
 	case SocksProxy:
 		configFile := filepath.Join(core.VarDir, "sockd.conf")
@@ -55,6 +57,7 @@ func InitModule(proxyType ProxyType) {
 			configFile:  configFile,
 			pidFile:     filepath.Join(core.VarDir, "sockd.pid"),
 			cmdObject:   nil,
+			isRunning:   false,
 		}
 	}
 

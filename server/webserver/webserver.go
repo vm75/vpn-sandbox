@@ -276,7 +276,7 @@ func (i *IpInfo) HandleEvent(event utils.Event) {
 }
 
 func WebServer(port string) {
-	utils.RegisterListener([]string{"vpn-up", "vpn-down"}, &ipInfo)
+	utils.RegisterListener([]string{"vpn-up", "vpn-down", "proxy-up", "proxy-down"}, &ipInfo)
 
 	go utils.GetIpInfo(ipInfo)
 

@@ -259,9 +259,6 @@
 </template>
 
 <script>
-
-const REFRESH_TIME = 5000;
-
 // Main App Component
 export default {
   data() {
@@ -327,7 +324,7 @@ export default {
   },
   methods: {
     updateStatus(status) {
-      console.log(status);
+      // console.log(status);
 
       this.global.config = status.global.config;
       this.global.vpnType = status.global.config.vpnType;

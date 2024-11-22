@@ -10,6 +10,10 @@ import (
 )
 
 func isTunnelUp() bool {
+	if _, err := os.Stat("/sys/class/net/wg0"); os.IsNotExist(err) {
+		return false
+	}
+
 	out, err := utils.RunCommand(utils.UseSudo, "/usr/bin/wg", "show", "wg0")
 
 	if strings.Contains(out, "peer: ") && err == nil {
