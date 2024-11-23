@@ -1,0 +1,62 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+  workflow_dispatch: # Allow manual triggering of the workflow
+
+env:
+  DOCKER_IMAGE: ${{ github.repository }} # Extracted from the GitHub repository
+  GHCR_IMAGE: ghcr.io/${{ github.repository }} # Full path for GHCR
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract tag version
+      id: extract_version
+      run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+    - name: Set build date
+      run: echo "build_date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+
+    - name: Build and push Docker image to Docker Hub
+      uses: docker/build-push-action@v5
+      with:
+        push: true
+        tags: |
+          ${{ env.DOCKER_IMAGE }}:${{ env.version }}
+          ${{ env.DOCKER_IMAGE }}:latest
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        build-args: |
+          IMAGE_VERSION=${{ env.version }}
+          BUILD_DATE=${{ env.build_date }}
+
+    - name: Build and push Docker image to GHCR
+      uses: docker/build-push-action@v5
+      with:
+        push: true
+        tags: |
+          ${{ env.GHCR_IMAGE }}:${{ env.version }}
+          ${{ env.GHCR_IMAGE }}:latest
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        build-args: |
+          IMAGE_VERSION=${{ env.version }}
+          BUILD_DATE=${{ env.build_date }}

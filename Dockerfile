@@ -1,5 +1,7 @@
+# syntax=docker/dockerfile:1.4
+
 # Stage 1: Build dante sockd and vpn-sandbox
-FROM golang:alpine AS build
+FROM --platform=$BUILDPLATFORM golang:alpine AS build
 
 # Set the working directory
 WORKDIR /workdir
@@ -14,22 +16,24 @@ RUN wget https://www.inet.no/dante/files/dante-$DANTE_VERSION.tar.gz --output-do
     ac_cv_func_sched_setscheduler=no ./configure --disable-client && \
     make install
 
-# Download go dependencies
+# Download Go dependencies
 COPY server/go.mod server/go.sum /workdir/server/
 RUN go mod download -C /workdir/server
 
 # Copy the server code
 COPY server /workdir/server
 
-# Build go server
+# Build Go server
+ARG TARGETOS
+ARG TARGETARCH
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -C /workdir/server -ldflags="-s -w" -o /workdir/vpn-sandbox
+    CGO_ENABLED=1 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -C /workdir/server -ldflags="-s -w" -o /workdir/vpn-sandbox
 
 # Compress the binary
 RUN upx /workdir/vpn-sandbox
 
 # Stage 2: Create the final minimal image
-FROM alpine
+FROM --platform=$TARGETPLATFORM alpine
 
 RUN apk --no-cache update
 RUN apk --no-cache upgrade
@@ -60,8 +64,8 @@ RUN addgroup root openvpn
 
 VOLUME ["/data"]
 
-# expose ports for http-proxy, socks-proxy and vpn-sandbox
-EXPOSE 8080/tcp 1080/tcp 80/tcp
+# Expose ports for vpn-sandbox, http-proxy, socks-proxy
+EXPOSE 80/tcp 1080/tcp 3128/tcp
 
 HEALTHCHECK --interval=60s --timeout=15s --start-period=120s \
     CMD netstat -an | grep -c ":::80 "
