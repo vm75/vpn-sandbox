@@ -1,0 +1,103 @@
+name: Build, Publish Docker Image, and Tag Repository
+
+on:
+  push:
+    branches:
+      - main # Monitor only the main branch
+    paths:
+      - 'CHANGELOG.md' # Trigger on changes to the CHANGELOG file
+  workflow_dispatch: # Allow manual triggering of the workflow
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-publish-tag:
+    name: Build and Publish Docker Image with Auto-Tagging
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from the changelog
+        id: get_version
+        run: |
+          version=$(head -n 1 CHANGELOG.md | sed 's/.*\[\(.*\)\].*/\1/')
+          if [[ -z "$version" ]]; then
+            echo "Error: Version not found in the changelog."
+            exit 1
+          fi
+          echo "Extracted version: $version"
+          # Parse major and minor versions
+          major=$(echo "$version" | cut -d. -f1)
+          minor=$(echo "$version" | cut -d. -f1,2)
+          echo "major=$major" >> $GITHUB_ENV
+          echo "minor=$minor" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_ENV
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          driver: docker-container
+          driver-opts: image=moby/buildkit:latest
+
+      - name: Set up QEMU for cross-platform builds
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build and Push
+        id: push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ github.repository }}:latest
+            ${{ github.repository }}:${{ env.version }}
+            ${{ github.repository }}:${{ env.major }}
+            ${{ github.repository }}:${{ env.minor }}
+            ${{ env.REGISTRY }}/${{ github.repository }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.version }}
+            ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.major }}
+            ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.minor }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+
+      - name: Verify Image on Docker Hub
+        run: docker pull docker.io/${{ env.IMAGE_NAME }}:${{ env.version }}
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Create and push Git tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ env.version }}
+          git push origin ${{ env.version }}

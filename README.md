@@ -2,6 +2,7 @@
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vm75/vpn-sandbox)](https://hub.docker.com/r/vm75/vpn-sandbox)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/vm75/vpn-sandbox/.github/workflows/ci.yml?branch=main)](https://github.com/vm75/vpn-sandbox/actions)
 
 **VPN Sandbox** is an open-source containerized solution for securely tunneling network traffic through a VPN. It supports **OpenVPN** and **WireGuard**, with features like **HTTP Proxy** and **SOCKS Proxy** support, DNS leak prevention, and a web-based interface for easy configuration. The container runs in **rootless mode** and is ideal for secure browsing or running custom applications behind a VPN.
 
@@ -73,13 +74,14 @@ The configuration templates can include custom parameters, such as endpoints, IP
 
 ## Volume Structure
 
-The container expects a volume mounted at `/data`. Below is the directory structure and some key files:
+The `/data` volume should contain the following structure:
 ```plaintext
 /data
 ├── config/         # Contains the sqlite3 database
 ├── var/            # Contains the runtime configuration and logs
 ├── apps.sh         # Custom apps script (optional)
 ```
+It is recommended to place the `apps.sh` script in the `/data` volume.
 
 ### Example `apps.sh` Script (optional)
 This script runs custom applications once the VPN connection is established:
@@ -118,10 +120,44 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ### 3rd-Party Components
 
-- [OpenVPN](https://openvpn.net/): [LICENSE](3rd-party/openvpn/COPYRIGHT.GPL)
-- [WireGuard](https://www.wireguard.com/): [LICENSE](3rd-party/wireguard/LICENSE)
-- [Dante (Socks Proxy)](https://www.inet.no/dante/): [LICENSE](3rd-party/dante/LICENSE)
-- [Tinyproxy (HTTP Proxy)](https://tinyproxy.github.io/): [LICENSE](3rd-party/tinyproxy/COPYING)
+<table>
+  <tr>
+    <th>Component</th>
+    <th>License</th>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://openvpn.net/">OpenVPN</a>
+    </td>
+    <td>
+      <a href="3rd-party/openvpn/COPYRIGHT.GPL">COPYRIGHT.GPL</a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://www.wireguard.com/">WireGuard</a>
+    </td>
+    <td>
+      <a href="3rd-party/wireguard/LICENSE">LICENSE</a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://www.inet.no/dante/">Dante (Socks Proxy)</a>
+    </td>
+    <td>
+      <a href="3rd-party/dante/LICENSE">LICENSE</a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://tinyproxy.github.io/">Tinyproxy (HTTP Proxy)</a>
+    </td>
+    <td>
+      <a href="3rd-party/tinyproxy/COPYING">COPYING</a>
+    </td>
+  </tr>
+</table>
 
 ---
 
