@@ -1,4 +1,10 @@
-# VPN Sandbox
+<div align="center">
+  <a href="https://github.com/vm75/vpn-sandbox">
+    <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/vpn-sandbox.png" alt="Logo" width="24" height="24" >
+    <span style="font-size:40px;">VPN Sandbox</span>
+  </a>
+</div>
+<div align="center">
 
 [![License]](LICENSE)
 [![Build]][build_url]
@@ -6,6 +12,9 @@
 [![Size]][tag_url]
 [![Pulls]][hub_url]
 <!-- [![Package]][pkg_url] -->
+
+</div>
+<br>
 
 **VPN Sandbox** is an open-source containerized solution for securely tunneling network traffic through a VPN. It supports **OpenVPN** and **WireGuard**, with features like **HTTP Proxy** and **SOCKS Proxy** support, DNS leak prevention, and a web-based interface for easy configuration. The container runs in **rootless mode** and is ideal for secure browsing or running custom applications behind a VPN.
 
