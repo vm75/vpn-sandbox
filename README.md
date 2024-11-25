@@ -43,7 +43,6 @@ docker run -d --name vpn-sandbox \
 ### Example `docker-compose.yml`
 Here's an example configuration for Docker Compose:
 ```yaml
-version: '3.8'
 services:
   vpn-sandbox:
     image: vpn-sandbox/vpn-sandbox
