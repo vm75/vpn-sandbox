@@ -14,7 +14,7 @@
 <!-- [![Package]][pkg_url] -->
 
 </div>
-<br>
+
 
 **VPN Sandbox** is an open-source containerized solution for securely tunneling network traffic through a VPN. It supports **OpenVPN** and **WireGuard**, with features like **HTTP Proxy** and **SOCKS Proxy** support, DNS leak prevention, and a web-based interface for easy configuration. The container runs in **rootless mode** and is ideal for secure browsing or running custom applications behind a VPN.
 
@@ -38,7 +38,7 @@ Via Docker Compose:
 ```yaml
 services:
   vpn-sandbox:
-    image: vpn-sandbox/vpn-sandbox
+    image: vm75/vpn-sandbox
     container_name: vpn-sandbox
     cap_add:
       - NET_ADMIN
@@ -55,13 +55,13 @@ services:
 
 Via Docker CLI:
 ```bash
-docker pull vpn-sandbox/vpn-sandbox
+docker pull vm75/vpn-sandbox
 docker run -d --name vpn-sandbox \
   --cap-add=NET_ADMIN \
   --device=/dev/net/tun \
   -v /path/to/data:/data \
   -p 8080:80 \
-  vpn-sandbox/vpn-sandbox
+  vm75/vpn-sandbox
 ```
 
 ## Configuration ⚙️
