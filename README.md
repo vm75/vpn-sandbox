@@ -1,47 +1,31 @@
 # VPN Sandbox
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Docker Pulls](https://img.shields.io/docker/pulls/vm75/vpn-sandbox)](https://hub.docker.com/r/vm75/vpn-sandbox)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/vm75/vpn-sandbox/.github/workflows/ci.yml?branch=main)](https://github.com/vm75/vpn-sandbox/actions)
+[![License]](LICENSE)
+[![Build]][build_url]
+[![Version]][tag_url]
+[![Size]][tag_url]
+[![Pulls]][hub_url]
+<!-- [![Package]][pkg_url] -->
 
 **VPN Sandbox** is an open-source containerized solution for securely tunneling network traffic through a VPN. It supports **OpenVPN** and **WireGuard**, with features like **HTTP Proxy** and **SOCKS Proxy** support, DNS leak prevention, and a web-based interface for easy configuration. The container runs in **rootless mode** and is ideal for secure browsing or running custom applications behind a VPN.
 
 <p align="center">
-  <img src="./assets/dashboard.webp" width="80%" />
+  <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/docs/dashboard.webp" width="80%" />
 </p>
 
-## Key Features
+## Features
 
 - **Supports OpenVPN and WireGuard**: Choose between two popular VPN protocols for your secure connection needs.
-- **Rootless Container Support**: Run the container without elevated privileges, enhancing security.
+- **Rootless Container Support**: Run the container without elevated privileges (Docker/Podman/Kubernetes).
 - **HTTP and SOCKS Proxy**: Redirect host network traffic through proxies to browse securely.
 - **Web-Based Configuration UI**: Configure VPN servers and manage settings via an intuitive web interface.
 - **Template-based Server Configuration**: Create and manage server configurations using templates.
 - **Prevention of DNS Leaks and LAN Access**: Ensures that DNS queries do not leak and blocks direct LAN traffic for enhanced privacy.
-- **Custom App Support**: Execute custom scripts or applications when the VPN connection is established.
+- **Custom App Support**: Run custom Linux applications in the sandbox.
 
-## Getting Started
+## Usage  🐳
 
-### Prerequisites
-
-- Install Docker or Podman.
-- Configure a persistent volume for `/data`.
-
-### Quick Start
-
-Pull the Docker image and run the container:
-```bash
-docker pull vpn-sandbox/vpn-sandbox
-docker run -d --name vpn-sandbox \
-  --cap-add=NET_ADMIN \
-  --device=/dev/net/tun \
-  -v /path/to/data:/data \
-  -p 8080:80 \
-  vpn-sandbox/vpn-sandbox
-```
-
-### Example `docker-compose.yml`
-Here's an example configuration for Docker Compose:
+Via Docker Compose:
 ```yaml
 services:
   vpn-sandbox:
@@ -60,12 +44,18 @@ services:
     restart: unless-stopped
 ```
 
-Start the service with:
+Via Docker CLI:
 ```bash
-docker-compose up -d
+docker pull vpn-sandbox/vpn-sandbox
+docker run -d --name vpn-sandbox \
+  --cap-add=NET_ADMIN \
+  --device=/dev/net/tun \
+  -v /path/to/data:/data \
+  -p 8080:80 \
+  vpn-sandbox/vpn-sandbox
 ```
 
-## Server Configuration
+## Configuration ⚙️
 
 To add a new server, use the web interface to create a new server configuration. It supports **OpenVPN** and **WireGuard** configurations.
 
@@ -129,7 +119,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
       <a href="https://openvpn.net/">OpenVPN</a>
     </td>
     <td>
-      <a href="3rd-party/openvpn/COPYRIGHT.GPL">COPYRIGHT.GPL</a>
+      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/openvpn/COPYRIGHT.GPL">COPYRIGHT.GPL</a>
     </td>
   </tr>
   <tr>
@@ -137,7 +127,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
       <a href="https://www.wireguard.com/">WireGuard</a>
     </td>
     <td>
-      <a href="3rd-party/wireguard/LICENSE">LICENSE</a>
+      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/wireguard/LICENSE">LICENSE</a>
     </td>
   </tr>
   <tr>
@@ -145,7 +135,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
       <a href="https://www.inet.no/dante/">Dante (Socks Proxy)</a>
     </td>
     <td>
-      <a href="3rd-party/dante/LICENSE">LICENSE</a>
+      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/dante/LICENSE">LICENSE</a>
     </td>
   </tr>
   <tr>
@@ -153,7 +143,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
       <a href="https://tinyproxy.github.io/">Tinyproxy (HTTP Proxy)</a>
     </td>
     <td>
-      <a href="3rd-party/tinyproxy/COPYING">COPYING</a>
+      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/tinyproxy/COPYING">COPYING</a>
     </td>
   </tr>
 </table>
@@ -161,3 +151,17 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ---
 
 **VPN Sandbox** provides a simple, secure, and flexible way to manage VPN connections using containerization. Contributions are welcome! 🚀
+
+[license_url]: https://github.com/vm75/vpn-sandbox/blob/main/LICENSE
+[build_url]: https://github.com/vm75/vpn-sandbox/actions
+[hub_url]: https://hub.docker.com/r/vm75/vpn-sandbox
+[tag_url]: https://hub.docker.com/r/vm75/vpn-sandbox/tags
+[pkg_url]: https://github.com/vm75/vpn-sandbox/pkgs/container/vpn-sandbox
+[screenshot_url]: https://raw.githubusercontent.com/vm75/vpn-sandbox/main/docs/screenshot.gif
+
+[License]: https://img.shields.io/badge/license-MIT-blue.svg
+[Build]: https://img.shields.io/github/actions/workflow/status/vm75/vpn-sandbox/.github/workflows/ci.yml?branch=main
+[Version]: https://img.shields.io/docker/v/vm75/vpn-sandbox/latest?arch=amd64&sort=semver&color=066da5
+[Size]: https://img.shields.io/docker/image-size/vm75/vpn-sandbox/latest?color=066da5&label=size
+[Package]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fipitio.github.io%2Fbackage%2Fvm75%2Fvpn-sandbox%2Fvpn-sandbox.json&query=%24.downloads&logo=github&style=flat&color=066da5&label=pulls
+[Pulls]: https://img.shields.io/docker/pulls/vm75/vpn-sandbox.svg?style=flat&label=pulls&logo=docker
