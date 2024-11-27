@@ -71,7 +71,7 @@ func GetHostGateway() string {
 func GetIpInfo(ipInfo map[string]interface{}) error {
 	LogLn("get ip info")
 	// https://worldtimeapi.org/api/ip
-	cmd := exec.Command("/usr/bin/wget", "-q", "-O", "-", "https://ipinfo.io/json")
+	cmd := exec.Command("/usr/bin/wget", "--no-check-certificate", "-q", "-O", "-", "https://ipinfo.io/json")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		LogLn(string(out))
