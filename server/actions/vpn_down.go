@@ -13,8 +13,7 @@ func VpnDown() {
 	utils.RestoreResolvConf()
 
 	// get host gateway from resolv.conf
-	hostGateway := utils.GetHostGateway()
-	utils.LogLn("host gateway: " + hostGateway)
+	utils.LogLn("host gateway: " + core.HostGateway)
 
 	if core.Testing {
 		utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
@@ -29,7 +28,7 @@ func VpnDown() {
 	utils.RunCommand(false, "/sbin/ip", "route", "del", "default")
 
 	// Add default gateway
-	utils.RunCommand(false, "/sbin/ip", "route", "add", "default", "via", hostGateway, "dev", "eth0")
+	utils.RunCommand(false, "/sbin/ip", "route", "add", "default", "via", core.HostGateway, "dev", "eth0")
 
 	// Set firewall rules
 	// Flush existing rules to start fresh

@@ -44,6 +44,14 @@ func RestoreResolvConf() {
 }
 
 func GetHostGateway() string {
+	out, _ := RunCommand(false, "/sbin/ip", "route", "show", "default")
+
+	// get line starting with default via and get the following ip in that line
+	gw := strings.Split(strings.Split(string(out), "default via ")[1], " ")[0]
+	if gw != "" {
+		return gw
+	}
+
 	if _, err := os.Stat(ResolvConfBackup); !os.IsNotExist(err) {
 		fileContent, err := os.ReadFile(ResolvConfBackup)
 		if err == nil {

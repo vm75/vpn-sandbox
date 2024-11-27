@@ -14,6 +14,7 @@ var VarDir string
 var ServerPidFile string
 var AppScript string
 var Testing bool
+var HostGateway string
 
 type GlobalSettings struct {
 	VPNTypes      []string `json:"vpnTypes"`
@@ -76,6 +77,9 @@ func Init(dataDir string, appMode AppMode) error {
 	}
 
 	utils.InitLog(filepath.Join(VarDir, "vpn-sandbox.log"))
+
+	// get host gateway from resolv.conf
+	HostGateway = utils.GetHostGateway()
 
 	// if pid file exists, and process is still running, return
 	// if utils.SignalRunning(ServerPidFile, syscall.SIGCONT) {

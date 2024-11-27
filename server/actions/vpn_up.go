@@ -111,11 +111,9 @@ func VpnUp(netSpec *NetSpec) {
 	}
 
 	if netSpec.VpnEndpoint != "" {
-		// get host gateway from resolv.conf
-		hostGateway := utils.GetHostGateway()
-		utils.LogLn("host gateway: " + hostGateway)
+		utils.LogLn("host gateway: " + core.HostGateway)
 
-		utils.RunCommand(false, "/sbin/ip", "route", "add", netSpec.VpnEndpoint, "via", hostGateway)
+		utils.RunCommand(false, "/sbin/ip", "route", "add", netSpec.VpnEndpoint, "via", core.HostGateway)
 	}
 
 	// Set firewall rules
