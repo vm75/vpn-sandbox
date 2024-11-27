@@ -1,11 +1,7 @@
 <div align="center">
   <a href="https://github.com/vm75/vpn-sandbox">
     <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/vpn-sandbox.png" alt="Logo" width="24" height="24" >
-    <svg xmlns="http://www.w3.org/2000/svg" width="300" height="60" viewBox="0 0 300 24">
-      <text x="10" y="40" font-family="Arial, sans-serif" font-size="40" fill="blue">
-        VPN Sandbox
-      </text>
-    </svg>
+    <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/docs/title.svg" alt="Title">
   </a>
 </div>
 <div align="center">
