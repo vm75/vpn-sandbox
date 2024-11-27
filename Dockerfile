@@ -2,9 +2,7 @@
 FROM golang:alpine AS build
 
 # Install required build tools
-RUN apk add --no-cache build-base \
-    gcc musl-dev linux-headers \
-    libc-dev libc6-compat
+RUN apk add --no-cache build-base
 
 # Set the working directory
 WORKDIR /workdir
@@ -24,13 +22,6 @@ COPY server /workdir/server
 RUN --mount=type=cache,target=/root/.cache/go-build \
     GOOS=linux GOARCH=${TARGETARCH} go build -C /workdir/server -ldflags="-s -w" -o /workdir/vpn-sandbox
 
-# Build dante from source
-ARG DANTE_VERSION=1.4.3
-RUN wget https://www.inet.no/dante/files/dante-$DANTE_VERSION.tar.gz --output-document - | tar -xz && \
-    cd dante-$DANTE_VERSION && \
-    ./configure --build=$(uname -m)-unknown-linux-gnu ac_cv_func_sched_setscheduler=no --disable-client && \
-    make install
-
 # Stage 2: Create the final minimal image
 FROM alpine:latest AS runtime
 
@@ -38,10 +29,10 @@ FROM alpine:latest AS runtime
 RUN apk --no-cache update
 RUN apk --no-cache upgrade
 RUN apk --no-cache --no-progress add ip6tables iptables bind-tools inotify-tools \
-    openvpn wireguard-tools-wg tinyproxy
+    openvpn wireguard-tools-wg tinyproxy dante-server
+RUN ln -s /usr/sbin/sockd /usr/bin/sockd
 
 # Copy binaries from build stage
-COPY --from=build /usr/local/sbin/sockd /usr/bin/sockd
 COPY --from=build /workdir/vpn-sandbox /opt/vpn-sandbox/vpn-sandbox
 
 # Copy the server code
