@@ -1,17 +1,32 @@
-.PHONY: build run test-ci start stop
+.PHONY: build run clean start stop logs test test-start test-stop
 default: build
 
 build:
-	docker buildx build --platform linux/amd64 --format docker -t vm75/vpn-sandbox .
+	podman build -t vm75/vpn-sandbox .
 
 run:
-	docker run --rm --cap-add NET_ADMIN -p 8080:80 -p 1080:1080 -p 3128:3128 -v ./test:/data vm75/vpn-sandbox
+	podman compose up -d
 
-test-ci:
-	act -s DOCKER_USERNAME -s DOCKER_PASSWORD -s GITHUB_TOKEN
+clean:
+	podman compose down
 
 start:
-	./test/cmd.sh run
+	podman compose start
 
 stop:
+	podman compose stop
+
+logs:
+	podman logs vpn
+
+sh:
+	podman exec -ti vpn sh
+
+test:
+	podman run --rm --cap-add NET_ADMIN -p 8080:80 -p 1080:1080 -p 3128:3128 -v ./test:/data vm75/vpn-sandbox
+
+test-start:
+	./test/cmd.sh run
+
+test-stop:1
 	./test/cmd.sh stop

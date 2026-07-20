@@ -16,7 +16,7 @@
 </div>
 
 
-**VPN Sandbox** is an open-source containerized solution for securely tunneling network traffic through a VPN. It supports **OpenVPN** and **WireGuard**, with features like **HTTP Proxy** and **SOCKS Proxy** support, DNS leak prevention, and a web-based interface for easy configuration. The container runs in **rootless mode** and is ideal for secure browsing or running custom applications behind a VPN.
+**VPN Sandbox** is an open-source containerized solution for securely tunneling network traffic through a VPN. It supports **OpenVPN** and **WireGuard**, with features like **HTTP Proxy** and **SOCKS Proxy** support, DNS leak prevention, and a web-based interface for easy configuration. It is ideal for secure browsing or running custom applications behind a VPN. A real VPN tunnel requires the container to receive `NET_ADMIN` and `/dev/net/tun`. Note that despite needing these permissions, the container can still be run as a rootless Podman container.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/docs/screenshots.gif" alt="Screenshot" />
@@ -34,7 +34,17 @@
 
 ## Usage  🐳
 
-Via Docker Compose:
+VPN Sandbox fully supports both **Docker** and **rootless Podman**. The examples below provide configurations for both.
+
+### Via Make (uses Podman by default):
+```bash
+make run    # Starts the stack in the background
+make logs   # View logs
+make stop   # Stop the stack
+make clean  # Tear down the stack
+```
+
+### Via Docker Compose / Podman Compose:
 ```yaml
 services:
   vpn-sandbox:
@@ -53,7 +63,7 @@ services:
     restart: unless-stopped
 ```
 
-Via Docker CLI:
+### Via Docker CLI / Podman CLI:
 ```bash
 docker pull vm75/vpn-sandbox
 docker run -d --name vpn-sandbox \
@@ -61,6 +71,8 @@ docker run -d --name vpn-sandbox \
   --device=/dev/net/tun \
   -v /path/to/data:/data \
   -p 8080:80 \
+  -p 1080:1080 \
+  -p 3128:3128 \
   vm75/vpn-sandbox
 ```
 

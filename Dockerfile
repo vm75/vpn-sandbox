@@ -2,6 +2,7 @@
 FROM golang:alpine AS build
 
 # Install required build tools
+RUN apk --no-cache update && apk --no-cache upgrade
 RUN apk add --no-cache build-base
 
 # Set the working directory
