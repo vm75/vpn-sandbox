@@ -135,7 +135,7 @@
   async function importVue(url) {
     try {
       // Step 1: Download the content of the URL
-      const response = await fetch(url);
+      const response = await fetch(url, { cache: 'no-store' });
       const content = await response.text();
 
       // Step 2: Transpose the string content (You can modify this method as needed)

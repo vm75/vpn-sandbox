@@ -15,7 +15,10 @@ const (
 	SIGRTMAX = 64
 )
 
-var sigChannel = make(chan os.Signal, 1)
+// Leave room for an up/down transition while the previous lifecycle action is
+// still completing. os/signal uses a non-blocking send and drops a signal when
+// this channel is full.
+var sigChannel = make(chan os.Signal, 16)
 var signalHandlers = make(map[os.Signal][]SignalHandler)
 
 func InitSignals(signals []os.Signal) {

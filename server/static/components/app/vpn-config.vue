@@ -28,6 +28,11 @@ export default {
   components: {
     'list-editor': Vue.defineAsyncComponent(() => ComponentLoader.import('core/list-editor')),
   },
+  watch: {
+    servers(newServers) {
+      this.serverList = newServers || [];
+    },
+  },
   methods: {
     editServer: function (index) {
       ComponentLoader.inject({

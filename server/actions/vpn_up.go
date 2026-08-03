@@ -3,6 +3,7 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,7 +27,7 @@ func SaveOpenVPNSpec() {
 		Domains:     []string{},
 		DNS:         []string{},
 		VPNGateway:  os.Getenv("route_vpn_gateway"),
-		VpnEndpoint: "",
+		VpnEndpoint: os.Getenv("trusted_ip"),
 	}
 
 	// iterate over foreign_option_N env vars
@@ -118,13 +119,19 @@ func VpnUp(netSpec *NetSpec) {
 
 	// Set firewall rules
 	// Flush existing rules to start fresh
-	utils.RunCommand(false, "/sbin/iptables", "-F")
+	utils.RunCommand(false, "/usr/sbin/iptables", "-F")
 
 	// Allow incoming ESTABLISHED and RELATED connections on the VPN interface
-	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT")
+	utils.RunCommand(false, "/usr/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT")
 
 	// Drop all other incoming connections on the VPN interface
-	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-j", "DROP")
+	utils.RunCommand(false, "/usr/sbin/iptables", "-A", "INPUT", "-i", netSpec.Dev, "-j", "DROP")
+
+	// Prevent container-initiated traffic from bypassing the tunnel. Existing
+	// replies keep the published management ports usable, and the VPN endpoint
+	// remains reachable on eth0 so the tunnel can stay established.
+	setVpnOutputFirewall("/usr/sbin/iptables", netSpec.Dev, netSpec.VpnEndpoint)
+	setVpnOutputFirewall("/usr/sbin/ip6tables", netSpec.Dev, netSpec.VpnEndpoint)
 
 	// Trigger vpn-up actions
 	utils.LogLn("Triggering vpn-up actions")
@@ -132,5 +139,22 @@ func VpnUp(netSpec *NetSpec) {
 
 	// Trigger apps script
 	utils.LogLn("Starting apps script")
-	utils.RunCommand(false, core.AppScript, "up")
+	if err := utils.RunCommandLogged(false, core.AppScript, "up"); err != nil {
+		utils.LogError("Error starting apps script", err)
+	}
+}
+
+func setVpnOutputFirewall(command, dev, vpnEndpoint string) {
+	utils.RunCommand(false, command, "-F", "OUTPUT")
+	utils.RunCommand(false, command, "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT")
+	utils.RunCommand(false, command, "-A", "OUTPUT", "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT")
+	utils.RunCommand(false, command, "-A", "OUTPUT", "-o", dev, "-j", "ACCEPT")
+
+	ip := net.ParseIP(vpnEndpoint)
+	isIPv6Command := strings.Contains(command, "ip6tables")
+	if ip != nil && ((isIPv6Command && ip.To4() == nil) || (!isIPv6Command && ip.To4() != nil)) {
+		utils.RunCommand(false, command, "-A", "OUTPUT", "-o", "eth0", "-d", vpnEndpoint, "-j", "ACCEPT")
+	}
+
+	utils.RunCommand(false, command, "-A", "OUTPUT", "-j", "DROP")
 }

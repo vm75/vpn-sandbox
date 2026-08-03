@@ -1,3 +1,7 @@
+## [0.1.1]
+* Improve VPN lifecycle handling, proxy integration, and WebUI configuration flows.
+* Add container build/version metadata and refresh deployment documentation.
+
 ## [0.1.0]
 * Updated all libraries and base image dependencies.
 * Added Podman Compose shortcuts to Makefile (`run`, `clean`, `start`, `stop`, `logs`, `sh`).

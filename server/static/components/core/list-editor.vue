@@ -1,4 +1,7 @@
 <template>
+  <confirm-delete :show="removeIndex !== null" :itemName="removeItemName" @cancel="cancelRemoveItem"
+    @confirm="confirmRemoveItem">
+  </confirm-delete>
   <table v-if="listLocal.length > 0" class="table is-striped is-fullwidth">
     <thead>
       <tr>
@@ -9,10 +12,10 @@
     <tbody>
       <tr v-for="(item, arrIndex) in listLocal" :key="arrIndex">
         <td>
-          <button class="button is-rounded is-small is-info is-light" @click="editItemLocal(arrIndex)">
+          <button type="button" class="button is-rounded is-small is-info is-light" @click="editItemLocal(arrIndex)">
             ✎
           </button>
-          <button class="button is-rounded is-small is-danger is-light" @click="removeItemLocal(arrIndex)">
+          <button type="button" class="button is-rounded is-small is-danger is-light" @click="removeItemLocal(arrIndex)">
             🗑
           </button>
         </td>
@@ -22,7 +25,7 @@
       </tr>
     </tbody>
   </table>
-  <button class="button is-small is-info" @click="addItemLocal()">➕</button>
+  <button type="button" class="button is-small is-info" @click="addItemLocal()">➕</button>
 </template>
 
 <script>
@@ -59,7 +62,11 @@ export default {
   data() {
     return {
       listLocal: this.list || [],
+      removeIndex: null,
     }
+  },
+  components: {
+    'confirm-delete': Vue.defineAsyncComponent(() => ComponentLoader.import('core/confirm-delete')),
   },
   watch: {
     list(newList) {
@@ -87,11 +94,23 @@ export default {
     },
     removeItemLocal(index) {
       if (this.removeItem) {
-        const result = this.removeItem(index);
-        if (result) {
-          this.listLocal.splice(index, 1);
-          this.emitData();
-        }
+        this.removeIndex = index;
+      }
+    },
+    cancelRemoveItem() {
+      this.removeIndex = null;
+    },
+    confirmRemoveItem() {
+      const index = this.removeIndex;
+      this.removeIndex = null;
+      if (index === null || !this.removeItem) {
+        return;
+      }
+
+      const result = this.removeItem(index);
+      if (result) {
+        this.listLocal.splice(index, 1);
+        this.emitData();
       }
     },
     emitData() {
@@ -103,6 +122,14 @@ export default {
       }
       return this.listLocal[index];
     }
+  },
+  computed: {
+    removeItemName() {
+      if (this.removeIndex === null) {
+        return '';
+      }
+      return this.getDisplayString(this.removeIndex);
+    },
   },
 }
 </script>

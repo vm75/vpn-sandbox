@@ -4,11 +4,12 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 )
 
 func startProxy(p *ProxyModule) {
-	if !p.Config["enabled"].(bool) {
+	if !p.Config["enabled"].(bool) || !core.IsVpnUp() {
 		return
 	}
 	if utils.IsRunning(p.cmdObject) {

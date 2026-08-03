@@ -8,15 +8,26 @@ import (
 func VpnDown() {
 	utils.LogLn("VpnDown: Entry")
 
+	if !core.Testing {
+		// Stop application traffic before restoring direct gateway access.
+		utils.LogLn("Stopping apps script")
+		if err := utils.RunCommandLogged(false, core.AppScript, "down"); err != nil {
+			utils.LogError("Error stopping apps script", err)
+		}
+	}
+
+	// Notify tunnel-dependent modules before direct connectivity is restored.
+	utils.LogLn("Triggering vpn down actions")
+	utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
+
 	// restore resolv.conf
 	utils.LogLn("Restoring resolv.conf")
 	utils.RestoreResolvConf()
 
-	// get host gateway from resolv.conf
+	// Use the container gateway captured before tunnel routes are installed.
 	utils.LogLn("host gateway: " + core.HostGateway)
 
 	if core.Testing {
-		utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
 		utils.LogLn("Skipping vpn down actions for testing")
 		return
 	}
@@ -32,22 +43,15 @@ func VpnDown() {
 
 	// Set firewall rules
 	// Flush existing rules to start fresh
-	utils.RunCommand(false, "/sbin/iptables", "-F")
+	utils.RunCommand(false, "/usr/sbin/iptables", "-F")
+	utils.RunCommand(false, "/usr/sbin/ip6tables", "-F")
 
 	// Allow related and established connections (for existing sessions to work)
-	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT")
+	utils.RunCommand(false, "/usr/sbin/iptables", "-A", "INPUT", "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT")
 
 	// Allow incoming connections only on port 80
-	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-p", "tcp", "--dport", "80", "-j", "ACCEPT")
+	utils.RunCommand(false, "/usr/sbin/iptables", "-A", "INPUT", "-p", "tcp", "--dport", "80", "-j", "ACCEPT")
 
 	// Drop all other incoming connections
-	utils.RunCommand(false, "/sbin/iptables", "-A", "INPUT", "-j", "DROP")
-
-	// Trigger vpn down actions
-	utils.LogLn("Triggering vpn down actions")
-	utils.PublishEvent(utils.Event{Name: "vpn-down", Context: map[string]interface{}{}})
-
-	// Run app script
-	utils.LogLn("Stopping app script")
-	utils.RunCommand(false, core.AppScript, "down")
+	utils.RunCommand(false, "/usr/sbin/iptables", "-A", "INPUT", "-j", "DROP")
 }

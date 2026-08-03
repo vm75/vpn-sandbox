@@ -89,6 +89,11 @@ func forceRefreshHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func versionHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"version": core.Version})
+}
+
 func getGlobalConfigHandler(w http.ResponseWriter, r *http.Request) {
 	config, err := core.GetGlobalConfig()
 	if err != nil {
@@ -266,8 +271,14 @@ func fileContentHandler(w http.ResponseWriter, r *http.Request) {
 func handleStaticFiles(r *mux.Router) {
 	// Serve static files from /static and root (/)
 	fs := http.FileServer(http.Dir(staticDir))
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
-	r.PathPrefix("/").Handler(http.StripPrefix("/", fs)) // Serve "/" from staticDir
+	noCache := func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "no-cache")
+			handler.ServeHTTP(w, r)
+		})
+	}
+	r.PathPrefix("/static/").Handler(noCache(http.StripPrefix("/static/", fs)))
+	r.PathPrefix("/").Handler(noCache(http.StripPrefix("/", fs))) // Serve "/" from staticDir
 }
 
 func (i *IpInfo) HandleEvent(event utils.Event) {
@@ -285,6 +296,7 @@ func WebServer(port string) {
 
 	// Config-related routes
 	r.HandleFunc("/api/status", statusHandler).Methods("GET")
+	r.HandleFunc("/api/version", versionHandler).Methods("GET")
 	r.HandleFunc("/api/force-refresh", forceRefreshHandler).Methods("GET")
 	r.HandleFunc("/api/config", getGlobalConfigHandler).Methods("GET")
 	r.HandleFunc("/api/config/save", saveGlobalConfigHandler).Methods("POST")

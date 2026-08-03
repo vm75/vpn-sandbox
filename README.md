@@ -1,188 +1,86 @@
 <div align="center">
   <a href="https://github.com/vm75/vpn-sandbox">
-    <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/vpn-sandbox.png" alt="Logo" width="24" height="24" >
+    <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/vpn-sandbox.png" alt="Logo" width="24" height="24">
     <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/docs/title.svg" alt="Title">
   </a>
 </div>
+
 <div align="center">
 
-[![License]](LICENSE)
-[![Build]][build_url]
-[![Version]][tag_url]
-[![Size]][tag_url]
-[![Pulls]][hub_url]
-[![Package]][pkg_url]
+[![License]](LICENSE) [![Build]][build_url] [![Version]][tag_url] [![Pulls]][hub_url]
 
 </div>
 
+VPN Sandbox is an open-source Alpine container that routes traffic through a configured OpenVPN or WireGuard tunnel. It provides an optional web UI, HTTP proxy, SOCKS5 proxy, DNS-leak and direct-LAN protections, and an optional `/data/apps.sh` hook for applications that should follow VPN state.
 
-**VPN Sandbox** is an open-source containerized solution for securely tunneling network traffic through a VPN. It supports **OpenVPN** and **WireGuard**, with features like **HTTP Proxy** and **SOCKS Proxy** support, DNS leak prevention, and a web-based interface for easy configuration. It is ideal for secure browsing or running custom applications behind a VPN. A real VPN tunnel requires the container to receive `NET_ADMIN` and `/dev/net/tun`. Note that despite needing these permissions, the container can still be run as a rootless Podman container.
+## Requirements
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/docs/screenshots.gif" alt="Screenshot" />
-</p>
+For a real tunnel, the runtime needs access to `/dev/net/tun` and the `NET_ADMIN` capability. The management API has no application authentication, so publish its port only to a trusted network. The same applies to the optional proxy ports.
 
-## Features
+## Run with Compose
 
-- **Supports OpenVPN and WireGuard**: Choose between two popular VPN protocols for your secure connection needs.
-- **Rootless Container Support**: Run the container without elevated privileges (Docker/Podman/Kubernetes).
-- **HTTP and SOCKS Proxy**: Redirect host network traffic through proxies to browse securely.
-- **Web-Based Configuration UI**: Configure VPN servers and manage settings via an intuitive web interface.
-- **Template-based Server Configuration**: Create and manage server configurations using templates.
-- **Prevention of DNS Leaks and LAN Access**: Ensures that DNS queries do not leak and blocks direct LAN traffic for enhanced privacy.
-- **Custom App Support**: Run custom Linux applications in the sandbox.
+Adjust host paths and ports in [`compose.yml.example`](compose.yml.example), then start it with a Compose-compatible tool:
 
-## Usage  🐳
-
-VPN Sandbox fully supports both **Docker** and **rootless Podman**. The examples below provide configurations for both.
-
-### Via Make (uses Podman by default):
-```bash
-make run    # Starts the stack in the background
-make logs   # View logs
-make stop   # Stop the stack
-make clean  # Tear down the stack
+```sh
+podman compose -f compose.yml.example up -d
 ```
 
-### Via Docker Compose / Podman Compose:
-```yaml
-services:
-  vpn-sandbox:
-    image: vm75/vpn-sandbox
-    container_name: vpn-sandbox
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun
-    ports:
-      - "8080:80"   # Web UI
-      - "1080:1080" # SOCKS Proxy
-      - "3128:3128" # HTTP Proxy
-    volumes:
-      - /path/to/data:/data
-    restart: unless-stopped
+The example includes VPN Sandbox and a FlareSolverr sidecar sharing the VPN service network. Remove the sidecar and its extra ports if they are not needed. The example uses the published image `vm75/vpn-sandbox`; build locally with `make build` when developing.
+
+The management UI is available at `http://<host>:9080` with the example mapping. The container listens on port `80`; HTTP proxy and SOCKS5 proxy ports are `3128` and `1080`.
+
+## Run a local image
+
+```sh
+make build
+podman run --rm --cap-add NET_ADMIN \
+  --device /dev/net/tun \
+  -p 8080:80 -p 1080:1080 -p 3128:3128 \
+  -v "$PWD/test:/data" vm75/vpn-sandbox
 ```
 
-### Via Docker CLI / Podman CLI:
-```bash
-docker pull vm75/vpn-sandbox
-docker run -d --name vpn-sandbox \
-  --cap-add=NET_ADMIN \
-  --device=/dev/net/tun \
-  -v /path/to/data:/data \
-  -p 8080:80 \
-  -p 1080:1080 \
-  -p 3128:3128 \
-  vm75/vpn-sandbox
+`make run`, `make logs`, `make stop`, and `make clean` are shortcuts for the example stack. The project also supports Docker-compatible image and Compose tools; use their equivalent commands with [`Containerfile`](Containerfile) and `compose.yml.example`.
+
+## Configure VPN and proxies
+
+Open the web UI to create an OpenVPN or WireGuard server template, select the VPN type, and enable the desired module. Configuration is stored in SQLite and generated runtime files are kept under `/data/var`. VPN credentials and generated `.auth` files must remain private.
+
+The persistent volume has this shape:
+
+```text
+/data/
+├── config/vpn-sandbox.db
+├── var/                  # generated configs, logs, PIDs, and credentials
+└── apps.sh               # optional executable hook
 ```
 
-## Configuration ⚙️
+If present, `apps.sh` receives `setup` once on first initialization, then `up` after VPN activation and `down` when it stops. The script runs inside the container and is responsible for installing or starting any custom applications it needs.
 
-To add a new server, use the web interface to create a new server configuration. It supports **OpenVPN** and **WireGuard** configurations.
+## Development and tests
 
-The configuration templates can include custom parameters, such as endpoints, IP addresses, and ports. There can be multiple sets of values for each template. The parameters are enclosed in double brackets `{{}}`.
-
-## Volume Structure
-
-The `/data` volume should contain the following structure:
-```plaintext
-/data
-├── config/         # Contains the sqlite3 database
-├── var/            # Contains the runtime configuration and logs
-├── apps.sh         # Custom apps script (optional)
-```
-It is recommended to place the `apps.sh` script in the `/data` volume.
-
-### Example `apps.sh` Script (optional)
-This script runs custom applications once the VPN connection is established:
-```bash
-#!/bin/sh
-
-case "$1" in
-  setup)
-    apk --no-cache --no-progress <packages needed by apps>
-    ;;
-  up)
-    # Run your custom apps here
-    ;;
-  down)
-    # Stop your custom apps here
-    ;;
-esac
+```sh
+make build
+cd server && go test ./...
+cd server && CGO_ENABLED=1 go build .
 ```
 
-Ensure the script is executable:
-```bash
-chmod +x /data/apps.sh
-```
+The manual network harness is container-sensitive and requires Docker plus the required privileges: `make test-start` and `make test-stop`. Do not run route, DNS, or firewall test commands directly on the host.
 
-## Web UI Access
+## Project documentation
 
-The web UI is accessible at `http://<host-ip>:8080` by default. Use it to configure your VPN servers and settings with ease.
-
-## Proxy Usage
-
-Configure your browser or applications to use the container's HTTP (`3128`) or SOCKS (`1080`) proxies to securely route traffic through the VPN.
+- [`AGENTS.md`](AGENTS.md) — verified commands, repository rules, and safety boundaries.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — runtime components and event flow.
+- [`DOCKERHUB.md`](DOCKERHUB.md) — published image tags, platforms, and container usage.
+- [`CHANGELOG.md`](CHANGELOG.md) — user-visible release history.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-### 3rd-Party Components
-
-<table>
-  <tr>
-    <th>Component</th>
-    <th>License</th>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://openvpn.net/">OpenVPN</a>
-    </td>
-    <td>
-      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/openvpn/COPYRIGHT.GPL">COPYRIGHT.GPL</a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://www.wireguard.com/">WireGuard</a>
-    </td>
-    <td>
-      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/wireguard/LICENSE">LICENSE</a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://www.inet.no/dante/">Dante (Socks Proxy)</a>
-    </td>
-    <td>
-      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/dante/LICENSE">LICENSE</a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://tinyproxy.github.io/">Tinyproxy (HTTP Proxy)</a>
-    </td>
-    <td>
-      <a href="https://raw.githubusercontent.com/vm75/vpn-sandbox/main/3rd-party/tinyproxy/COPYING">COPYING</a>
-    </td>
-  </tr>
-</table>
-
----
-
-**VPN Sandbox** provides a simple, secure, and flexible way to manage VPN connections using containerization. Contributions are welcome! 🚀
+VPN Sandbox is licensed under the MIT License. See [`LICENSE`](LICENSE). Licenses for bundled OpenVPN, WireGuard, Dante, and Tinyproxy materials are in [`3rd-party/`](3rd-party/).
 
 [license_url]: https://github.com/vm75/vpn-sandbox/blob/main/LICENSE
 [build_url]: https://github.com/vm75/vpn-sandbox/actions
-[hub_url]: https://hub.docker.com/r/vm75/vpn-sandbox
 [tag_url]: https://hub.docker.com/r/vm75/vpn-sandbox/tags
-[pkg_url]: https://github.com/vm75/vpn-sandbox/pkgs/container/vpn-sandbox
-[screenshot_url]: https://raw.githubusercontent.com/vm75/vpn-sandbox/main/docs/screenshot.gif
-
 [License]: https://img.shields.io/badge/license-MIT-blue.svg
 [Build]: https://img.shields.io/github/actions/workflow/status/vm75/vpn-sandbox/.github/workflows/ci.yml?branch=main
 [Version]: https://img.shields.io/docker/v/vm75/vpn-sandbox/latest?arch=amd64&sort=semver&color=066da5
-[Size]: https://img.shields.io/docker/image-size/vm75/vpn-sandbox/latest?color=066da5&label=size
-[Package]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fipitio.github.io%2Fbackage%2Fvm75%2Fvpn-sandbox%2Fvpn-sandbox.json&query=%24.downloads&logo=github&style=flat&color=066da5&label=pulls
 [Pulls]: https://img.shields.io/docker/pulls/vm75/vpn-sandbox.svg?style=flat&label=pulls&logo=docker

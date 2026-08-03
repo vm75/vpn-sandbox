@@ -32,6 +32,26 @@ func RunCommand(isElevated bool, command string, args ...string) (string, error)
 	return string(out), err
 }
 
+// RunCommandLogged runs a command with stdout and stderr connected directly to
+// the application log. Unlike Cmd.Output, this does not wait for file
+// descriptors inherited by background processes after the command exits.
+func RunCommandLogged(isElevated bool, command string, args ...string) error {
+	if isElevated {
+		args = append([]string{command}, args...)
+		command = "sudo"
+	}
+
+	LogLn(fmt.Sprintf("Running: %s %s", command, strings.Join(args, " ")))
+
+	cmd := exec.Command(command, args...)
+	cmd.Stdout = GetLogFile()
+	cmd.Stderr = GetLogFile()
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+	return cmd.Run()
+}
+
 func StartCommand(isElevated bool, command string, args ...string) (*exec.Cmd, error) {
 	if isElevated {
 		args = append([]string{command}, args...)

@@ -41,7 +41,7 @@
                 <tbody>
                   <tr v-for="(endpoint, index) in server.endpoints" :key="'endpoint' + index">
                     <td>
-                      <button class="button is-small is-danger" @click="deleteEndpoint(index)">🗑</button>
+                      <button type="button" class="button is-small is-danger" @click="deleteEndpoint(index)">🗑</button>
                     </td>
                     <td>
                       <input class="input" v-model="endpoint.name" placeholder="name" />
@@ -52,7 +52,7 @@
                   </tr>
                   <tr>
                     <td>
-                      <button class="button is-small is-info" @click="newEndpoint()">➕</button>
+                      <button type="button" class="button is-small is-info" @click="newEndpoint()">➕</button>
                     </td>
                   </tr>
                 </tbody>
@@ -73,6 +73,9 @@
         </footer>
       </div>
     </div>
+    <confirm-delete :show="deleteEndpointIndex !== null" :itemName="deleteEndpointName"
+      @cancel="cancelDeleteEndpoint" @confirm="confirmDeleteEndpoint">
+    </confirm-delete>
   </div>
 </template>
 
@@ -111,7 +114,11 @@ export default {
       title: (this.server.name ? 'Edit ' : 'New ') + this.vpnType + ' Provider',
       isVisible: this.showOnLoad || false,
       nameIsEditable: true,
+      deleteEndpointIndex: null,
     }
+  },
+  components: {
+    'confirm-delete': Vue.defineAsyncComponent(() => ComponentLoader.import('core/confirm-delete')),
   },
   methods: {
     show(name, content) {
@@ -143,6 +150,17 @@ export default {
       this.server.endpoints.push(endpoint);
     },
     deleteEndpoint(index) {
+      this.deleteEndpointIndex = index;
+    },
+    cancelDeleteEndpoint() {
+      this.deleteEndpointIndex = null;
+    },
+    confirmDeleteEndpoint() {
+      const index = this.deleteEndpointIndex;
+      this.deleteEndpointIndex = null;
+      if (index === null) {
+        return;
+      }
       this.server.endpoints.splice(index, 1);
     }
   },
@@ -158,6 +176,12 @@ export default {
     },
     hasParams() {
       return this.variables.length > 0;
+    },
+    deleteEndpointName() {
+      if (this.deleteEndpointIndex === null) {
+        return '';
+      }
+      return this.server.endpoints[this.deleteEndpointIndex].name || 'this endpoint';
     },
   },
   mounted() {

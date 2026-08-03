@@ -1,14 +1,14 @@
-.PHONY: build run clean start stop logs test test-start test-stop
+.PHONY: build run clean start stop logs test debug debug-start debug-stop
 default: build
 
 build:
-	podman build -t vm75/vpn-sandbox .
+	podman build -f Containerfile -t vm75/vpn-sandbox .
 
 run:
-	podman compose up -d
+	podman compose -f compose.yml.example up -d
 
 clean:
-	podman compose down
+	podman compose -f compose.yml.example down
 
 start:
 	podman compose start
@@ -23,10 +23,14 @@ sh:
 	podman exec -ti vpn sh
 
 test:
+	podman build -f Containerfile -t localhost/vm75/vpn-sandbox:latest .
+	podman compose -f data/compose.yml up -d --force-recreate
+
+debug:
 	podman run --rm --cap-add NET_ADMIN -p 8080:80 -p 1080:1080 -p 3128:3128 -v ./test:/data vm75/vpn-sandbox
 
-test-start:
-	./test/cmd.sh run
+debug-start:
+	./debug/cmd.sh run
 
-test-stop:1
-	./test/cmd.sh stop
+debug-stop:
+	./debug/cmd.sh stop

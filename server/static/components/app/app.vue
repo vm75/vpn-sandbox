@@ -3,7 +3,10 @@
   <section>
     <div class="mb-4 is-flex is-justify-content-center is-align-items-center">
       <icon icon="assets/vpn-sandbox.png"></icon>
-      <h1 class="title ml-2">VPN Sandbox</h1>
+      <div class="ml-2 is-flex is-align-items-baseline">
+        <h1 class="title mb-1">VPN Sandbox</h1>
+        <small v-if="version" class="ml-2 has-text-grey">v{{ version }}</small>
+      </div>
     </div>
   </section>
   <section>
@@ -250,10 +253,6 @@
           <span>Docker Hub</span>
         </a>
       </div>
-      <!-- Attribution Link -->
-      <a href="https://www.flaticon.com/free-icons/vpn" title="vpn icons" target="_blank" class="attribution-link">
-        Vpn icons created by Ranah Pixel Studio - Flaticon
-      </a>
     </div>
   </section>
 </template>
@@ -264,6 +263,7 @@ export default {
   data() {
     return {
       currentTab: 'config',
+      version: '',
       global: {
         modified: false,
         vpnType: 'OpenVPN',
@@ -460,6 +460,14 @@ export default {
     }
   },
   mounted() {
+    fetch("api/version")
+      .then(response => response.json())
+      .then(data => {
+        this.version = data.version;
+        document.title = `VPN Sandbox v${data.version}`;
+      })
+      .catch(error => console.error("Error loading version:", error));
+
     const eventSource = new EventSource("api/status");
 
     eventSource.onmessage = (event) => {
