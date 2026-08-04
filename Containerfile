@@ -1,8 +1,8 @@
 # Stage 1: Build 3proxy
 FROM alpine:latest AS proxy-build
 
-ARG THREEPROXY_VERSION=0.9.6
-RUN apk add --no-cache build-base linux-headers wget
+ARG THREEPROXY_VERSION=0.9.7
+RUN apk add --no-cache build-base linux-headers wget openssl-dev pcre2-dev
 WORKDIR /workdir/3proxy
 RUN wget -qO- "https://github.com/3proxy/3proxy/archive/refs/tags/${THREEPROXY_VERSION}.tar.gz" \
     | tar -xz --strip-components=1 \
@@ -32,11 +32,10 @@ FROM alpine:latest AS runtime
 
 RUN apk --no-cache update && apk --no-cache upgrade
 RUN apk add --no-cache --no-progress ip6tables iptables bind-tools inotify-tools \
-    openvpn wireguard-tools-wg
+    openvpn wireguard-tools-wg pcre2 libssl3
 
 COPY --from=proxy-build /workdir/3proxy/bin/3proxy /usr/bin/3proxy
 COPY --from=build /workdir/vpn-sandbox /opt/vpn-sandbox/vpn-sandbox
-COPY usr /usr
 COPY server/static /opt/vpn-sandbox/static
 COPY vpn-sandbox.png /opt/vpn-sandbox/static/assets
 

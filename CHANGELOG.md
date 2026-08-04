@@ -1,3 +1,7 @@
+## [0.2.0]
+* Upgrade the bundled 3proxy HTTP and SOCKS5 services to 0.9.7.
+* Fix container builds failing because of a stale runtime template copy.
+
 ## [0.1.2]
 * Replace Tinyproxy and Dante with 3proxy for HTTP and SOCKS5 proxy services.
 * Refresh cached IP information when a manual force refresh is requested.
