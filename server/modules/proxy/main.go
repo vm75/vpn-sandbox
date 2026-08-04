@@ -3,6 +3,7 @@ package proxy
 import (
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 )
@@ -18,46 +19,40 @@ type ProxyModule struct {
 	core.DefaultModule
 	proxyType   ProxyType
 	displayName string
-	execName    string
 	proxyCmd    []string
 	configFile  string
 	pidFile     string
+	cmdMutex    sync.Mutex
 	cmdObject   *exec.Cmd
-	isRunning   bool
+	done        chan struct{}
 }
 
 func InitModule(proxyType ProxyType) {
 	var module ProxyModule
 	switch proxyType {
 	case HttpProxy:
-		configFile := filepath.Join(core.VarDir, "tinyproxy.conf")
+		configFile := filepath.Join(core.VarDir, "3proxy-http.cfg")
 		module = ProxyModule{
 			DefaultModule: core.DefaultModule{
 				Name: "http_proxy",
 			},
 			proxyType:   HttpProxy,
 			displayName: "HTTP Proxy",
-			execName:    "tinyproxy",
-			proxyCmd:    []string{"/usr/bin/tinyproxy", "-d", "-c", configFile},
+			proxyCmd:    []string{"/usr/bin/3proxy", configFile},
 			configFile:  configFile,
-			pidFile:     filepath.Join(core.VarDir, "tinyproxy.pid"),
-			cmdObject:   nil,
-			isRunning:   false,
+			pidFile:     filepath.Join(core.VarDir, "3proxy-http.pid"),
 		}
 	case SocksProxy:
-		configFile := filepath.Join(core.VarDir, "sockd.conf")
+		configFile := filepath.Join(core.VarDir, "3proxy-socks.cfg")
 		module = ProxyModule{
 			DefaultModule: core.DefaultModule{
 				Name: "socks_proxy",
 			},
 			proxyType:   SocksProxy,
 			displayName: "SOCKS Proxy",
-			execName:    "sockd",
-			proxyCmd:    []string{"/usr/bin/sockd", "-f", configFile},
+			proxyCmd:    []string{"/usr/bin/3proxy", configFile},
 			configFile:  configFile,
-			pidFile:     filepath.Join(core.VarDir, "sockd.pid"),
-			cmdObject:   nil,
-			isRunning:   false,
+			pidFile:     filepath.Join(core.VarDir, "3proxy-socks.pid"),
 		}
 	}
 
@@ -69,6 +64,8 @@ func InitModule(proxyType ProxyType) {
 
 // IsRunning implements core.Module.
 func (p *ProxyModule) IsRunning() bool {
+	p.cmdMutex.Lock()
+	defer p.cmdMutex.Unlock()
 	return utils.IsRunning(p.cmdObject)
 }
 

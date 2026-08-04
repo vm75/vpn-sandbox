@@ -84,11 +84,6 @@ func SignalCmd(cmd *exec.Cmd, signal os.Signal) {
 	}
 }
 
-func CreateUser(username string) {
-	cmd := exec.Command("/usr/sbin/adduser", "-S", "-D", "-H", "-h", "/dev/null", "-G", username, username)
-	cmd.CombinedOutput()
-}
-
 func SignalRunning(pidFile string, signal os.Signal) bool {
 	if _, err := os.Stat(pidFile); err != nil {
 		LogF("PID file %s not found\n", pidFile)

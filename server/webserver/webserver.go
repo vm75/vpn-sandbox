@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 
@@ -17,9 +19,98 @@ type IpInfo map[string]interface{}
 
 var (
 	staticDir        = "./static"
-	ipInfo           = IpInfo{}
-	nwChangedChannel = make(chan string) // Channel for sending status updates
+	ipInfo           = &ipInfoCache{}
+	nwChangedChannel = make(chan string, 1) // Status updates are coalesced.
 )
+
+type ipInfoStatus struct {
+	Output     IpInfo     `json:"output"`
+	ExecutedAt *time.Time `json:"executedAt,omitempty"`
+	Event      string     `json:"event"`
+	EventAt    time.Time  `json:"eventAt"`
+	Stale      bool       `json:"stale"`
+}
+
+type ipInfoCache struct {
+	mu          sync.RWMutex
+	refreshMu   sync.Mutex
+	lookup      func(IpInfo) error
+	output      IpInfo
+	executedAt  time.Time
+	lastEvent   string
+	lastEventAt time.Time
+}
+
+type statusEventListener struct{}
+
+func (i *ipInfoCache) markEvent(name string, at time.Time) {
+	i.mu.Lock()
+	i.lastEvent = name
+	i.lastEventAt = at
+	i.mu.Unlock()
+}
+
+func (i *ipInfoCache) store(output IpInfo, executedAt time.Time) {
+	i.mu.Lock()
+	i.output = output
+	i.executedAt = executedAt
+	i.mu.Unlock()
+}
+
+func (i *ipInfoCache) snapshot() ipInfoStatus {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
+	output := make(IpInfo, len(i.output))
+	for key, value := range i.output {
+		output[key] = value
+	}
+
+	var executedAt *time.Time
+	if !i.executedAt.IsZero() {
+		value := i.executedAt
+		executedAt = &value
+	}
+
+	return ipInfoStatus{
+		Output:     output,
+		ExecutedAt: executedAt,
+		Event:      i.lastEvent,
+		EventAt:    i.lastEventAt,
+		Stale:      i.executedAt.IsZero() || i.executedAt.Before(i.lastEventAt),
+	}
+}
+
+func (i *ipInfoCache) refresh() bool {
+	i.refreshMu.Lock()
+	defer i.refreshMu.Unlock()
+
+	lookup := i.lookup
+	if lookup == nil {
+		lookup = func(output IpInfo) error {
+			return utils.GetIpInfo(output)
+		}
+	}
+
+	updated := IpInfo{}
+	if err := lookup(updated); err != nil {
+		return false
+	}
+
+	i.store(updated, time.Now())
+	return true
+}
+
+func notifyStatus(event string) {
+	select {
+	case nwChangedChannel <- event:
+	default:
+	}
+}
+
+func (statusEventListener) HandleEvent(event utils.Event) {
+	notifyStatus(event.Name)
+}
 
 type ModuleStatus struct {
 	Running bool                   `json:"running"`
@@ -51,8 +142,7 @@ func getStatus() map[string]interface{} {
 		status[name] = moduleStatus
 	}
 
-	utils.GetIpInfo(ipInfo)
-	status["ipInfo"] = ipInfo
+	status["ipInfo"] = ipInfo.snapshot()
 
 	return status
 }
@@ -85,7 +175,13 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func forceRefreshHandler(w http.ResponseWriter, _ *http.Request) {
-	nwChangedChannel <- "force"
+	ipInfo.markEvent("force", time.Now())
+	notifyStatus("force")
+	if !ipInfo.refresh() {
+		http.Error(w, "failed to refresh IP info", http.StatusBadGateway)
+		return
+	}
+	notifyStatus("ip-info")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -126,7 +222,7 @@ func getModuleStatusHandler(w http.ResponseWriter, r *http.Request) {
 	isRunning, err := core.GetModuleStatus(module)
 	status := ModuleStatus{
 		Running: isRunning,
-		Info:    ipInfo,
+		Info:    ipInfo.snapshot().Output,
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -281,15 +377,25 @@ func handleStaticFiles(r *mux.Router) {
 	r.PathPrefix("/").Handler(noCache(http.StripPrefix("/", fs))) // Serve "/" from staticDir
 }
 
-func (i *IpInfo) HandleEvent(event utils.Event) {
-	nwChangedChannel <- event.Name
-	// go utils.GetIpInfo(*i)
+func (i *ipInfoCache) HandleEvent(event utils.Event) {
+	i.markEvent(event.Name, time.Now())
+	notifyStatus(event.Name)
+
+	if i.refresh() {
+		notifyStatus("ip-info")
+	}
 }
 
 func WebServer(port string) {
-	utils.RegisterListener([]string{"vpn-up", "vpn-down", "proxy-up", "proxy-down"}, &ipInfo)
+	utils.RegisterListener([]string{"vpn-up", "vpn-down"}, ipInfo)
+	utils.RegisterListener([]string{"proxy-up", "proxy-down"}, statusEventListener{})
 
-	go utils.GetIpInfo(ipInfo)
+	ipInfo.markEvent("startup", time.Now())
+	go func() {
+		if ipInfo.refresh() {
+			notifyStatus("ip-info")
+		}
+	}()
 
 	// Create a new Gorilla Mux router
 	r := mux.NewRouter()

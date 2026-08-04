@@ -43,7 +43,7 @@ podman run --rm --cap-add NET_ADMIN \
 
 ## Configure VPN and proxies
 
-Open the web UI to create an OpenVPN or WireGuard server template, select the VPN type, and enable the desired module. Configuration is stored in SQLite and generated runtime files are kept under `/data/var`. VPN credentials and generated `.auth` files must remain private.
+Open the web UI to create an OpenVPN or WireGuard server template, select the VPN type, and enable the desired module. Configuration is stored in SQLite. The 3proxy HTTP and SOCKS5 runtime configs are generated as `/data/var/3proxy-http.cfg` and `/data/var/3proxy-socks.cfg`; other generated runtime files are also kept under `/data/var`. VPN and proxy credentials and generated `.auth` files must remain private.
 
 The persistent volume has this shape:
 
@@ -75,7 +75,7 @@ The manual network harness is container-sensitive and requires Docker plus the r
 
 ## License
 
-VPN Sandbox is licensed under the MIT License. See [`LICENSE`](LICENSE). Licenses for bundled OpenVPN, WireGuard, Dante, and Tinyproxy materials are in [`3rd-party/`](3rd-party/).
+VPN Sandbox is licensed under the MIT License. See [`LICENSE`](LICENSE). Licenses for bundled OpenVPN, WireGuard, and 3proxy materials are in [`3rd-party/`](3rd-party/).
 
 [license_url]: https://github.com/vm75/vpn-sandbox/blob/main/LICENSE
 [build_url]: https://github.com/vm75/vpn-sandbox/actions

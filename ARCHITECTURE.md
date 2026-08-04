@@ -7,7 +7,7 @@ VPN Sandbox is one Go process with a browser UI, SQLite configuration storage, V
 - `server/webserver` serves `server/static` and exposes the REST API plus the `/api/status` event stream.
 - `server/core` owns the shared data paths, SQLite connection, global configuration, and registered modules.
 - `server/modules/openvpn` and `server/modules/wireguard` implement VPN server templates and tunnel lifecycle.
-- `server/modules/proxy` manages Tinyproxy and Dante and reacts to VPN/global configuration events.
+- `server/modules/proxy` manages 3proxy HTTP and SOCKS5 processes and reacts to VPN/global configuration events.
 - `server/actions` applies DNS, default routes, firewall rules, and the optional app-script hooks.
 - `server/utils` provides command execution, filesystem/network helpers, logging, signals, and the event bus.
 

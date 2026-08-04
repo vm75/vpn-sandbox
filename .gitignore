@@ -4,5 +4,7 @@ __debug*
 *.log
 var/
 
-docker-compose.yml
+compose.yml
 .env
+
+__pycache__

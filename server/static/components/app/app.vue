@@ -168,6 +168,9 @@
               <div class="level">
                 <div class="level-left">
                   <h3 class="title is-4">IP Info</h3>
+                  <span v-if="ipInfo" class="tag ml-3" :class="ipInfo.stale ? 'is-warning' : 'is-success'">
+                    {{ ipInfo.stale ? 'Stale' : 'Fresh' }}
+                  </span>
                 </div>
                 <div class="level-right">
                   <div class="buttons">
@@ -182,34 +185,53 @@
                   </div>
                 </div>
               </div>
-              <div v-if="ipInfo && Object.keys(ipInfo).length > 0">
+              <div v-if="ipInfo">
+                <div class="content is-small has-text-grey mb-4">
+                  <div>
+                    Last executed:
+                    <span class="has-text-weight-medium">{{ formatTimestamp(ipInfo.executedAt) }}</span>
+                  </div>
+                  <div>
+                    Last trigger:
+                    <span class="has-text-weight-medium">
+                      {{ formatIpInfoEvent(ipInfo.event) }} at {{ formatTimestamp(ipInfo.eventAt) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div v-if="ipInfo && ipInfo.output && Object.keys(ipInfo.output).length > 0">
                 <div class="container">
                   <div class="columns">
                     <div class="column is-3 has-text-weight-bold">IP Address:</div>
-                    <div class="column" id="ip">{{ ipInfo.ip }}</div>
+                    <div class="column" id="ip">{{ ipInfo.output.ip }}</div>
                   </div>
 
                   <div class="columns">
                     <div class="column is-3 has-text-weight-bold">Provider:</div>
-                    <div class="column" id="org">{{ ipInfo.org }}</div>
+                    <div class="column" id="org">{{ ipInfo.output.org }}</div>
                   </div>
 
                   <div class="columns">
                     <div class="column is-3 has-text-weight-bold">Location:</div>
                     <div class="column" id="location">
-                      {{ ipInfo.city }}, {{ ipInfo.region }}, {{ ipInfo.country }}, {{ ipInfo.postal }}
+                      {{ ipInfo.output.city }}, {{ ipInfo.output.region }}, {{ ipInfo.output.country }},
+                      {{ ipInfo.output.postal }}
                     </div>
                   </div>
 
                   <div class="columns">
                     <div class="column is-3 has-text-weight-bold">Timezone:</div>
-                    <div class="column" id="timezone">{{ ipInfo.timezone }}</div>
+                    <div class="column" id="timezone">{{ ipInfo.output.timezone }}</div>
                   </div>
                 </div>
                 <!-- Map Display -->
-                <location-map class="mt-4" v-model:latitude="ipInfo.loc.split(',')[0]"
-                  v-model:longitude="ipInfo.loc.split(',')[1]" v-model:city="ipInfo.city">
+                <location-map v-if="ipInfo.output.loc" class="mt-4"
+                  v-model:latitude="ipInfo.output.loc.split(',')[0]"
+                  v-model:longitude="ipInfo.output.loc.split(',')[1]" v-model:city="ipInfo.output.city">
                 </location-map>
+              </div>
+              <div v-else class="notification is-light">
+                Waiting for the first IP info check.
               </div>
             </div>
           </div>
@@ -323,6 +345,21 @@ export default {
     'file-explorer': Vue.defineAsyncComponent(() => ComponentLoader.import('core/file-explorer')),
   },
   methods: {
+    formatTimestamp(value) {
+      if (!value) {
+        return 'Not yet completed';
+      }
+      return new Date(value).toLocaleString();
+    },
+    formatIpInfoEvent(value) {
+      const labels = {
+        'startup': 'Startup',
+        'vpn-up': 'Tunnel up',
+        'vpn-down': 'Tunnel down',
+        'force': 'Manual refresh',
+      };
+      return labels[value] || value || 'Unknown';
+    },
     updateStatus(status) {
       // console.log(status);
 

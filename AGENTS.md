@@ -1,6 +1,6 @@
 # VPN Sandbox agent guide
 
-VPN Sandbox is a Go daemon and web UI packaged as an Alpine container. It routes container traffic through a configured OpenVPN or WireGuard tunnel and can run Tinyproxy and Dante as HTTP and SOCKS5 proxies. Real tunnel operation changes routes, DNS, and iptables rules and requires `NET_ADMIN` plus `/dev/net/tun`.
+VPN Sandbox is a Go daemon and web UI packaged as an Alpine container. It routes container traffic through a configured OpenVPN or WireGuard tunnel and can run 3proxy HTTP and SOCKS5 proxies. Real tunnel operation changes routes, DNS, and iptables rules and requires `NET_ADMIN` plus `/dev/net/tun`.
 
 ## Repository map
 
@@ -8,7 +8,7 @@ VPN Sandbox is a Go daemon and web UI packaged as an Alpine container. It routes
 - `server/core/` — shared paths, SQLite database, global configuration, and module registry.
 - `server/actions/` — VPN up/down DNS, route, firewall, and app-script side effects.
 - `server/modules/openvpn/`, `wireguard/` — tunnel configuration and lifecycle.
-- `server/modules/proxy/` — Tinyproxy and Dante configuration and lifecycle.
+- `server/modules/proxy/` — 3proxy HTTP and SOCKS5 configuration and lifecycle.
 - `server/webserver/` — REST/SSE API and static-file serving.
 - `server/static/` — Vue 3 components loaded from CDN assets; `component-load.js` defines the SFC loading rules.
 - `usr/local/etc/` — source templates for proxy configuration.

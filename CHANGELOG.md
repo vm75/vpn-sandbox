@@ -1,3 +1,7 @@
+## [0.1.2]
+* Replace Tinyproxy and Dante with 3proxy for HTTP and SOCKS5 proxy services.
+* Refresh cached IP information when a manual force refresh is requested.
+
 ## [0.1.1]
 * Improve VPN lifecycle handling, proxy integration, and WebUI configuration flows.
 * Add container build/version metadata and refresh deployment documentation.

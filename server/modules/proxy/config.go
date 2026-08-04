@@ -2,88 +2,77 @@ package proxy
 
 import (
 	"errors"
+	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"vpn-sandbox/core"
 	"vpn-sandbox/utils"
 )
 
-func updateHttpProxyConfig(p *ProxyModule) error {
-	vpnDev := core.GetVpnDevice()
-	if vpnDev == "" {
-		return errors.New("VPN device not found")
+func quoteConfigValue(value string) (string, error) {
+	if strings.ContainsAny(value, "\r\n") {
+		return "", errors.New("3proxy config values cannot contain newlines")
 	}
-
-	content, err := os.ReadFile("/usr/local/etc/tinyproxy.conf")
-	if err != nil {
-		return err
-	}
-
-	contentStr := string(content)
-
-	listenRegex := regexp.MustCompile(`Listen.*`)
-	bindRegex := regexp.MustCompile(`Bind.*`)
-
-	listenAddr := utils.GetIpV4Addr("eth0", true)
-	bindAddr := utils.GetIpV4Addr(vpnDev, true)
-
-	if listenAddr == "" || bindAddr == "" {
-		return errors.New("listen or bind not found")
-	}
-
-	contentStr = listenRegex.ReplaceAllString(contentStr, "Listen "+listenAddr)
-	contentStr = bindRegex.ReplaceAllString(contentStr, "Bind "+bindAddr)
-
-	if core.GlobalConfig.ProxyUsername != "" && core.GlobalConfig.ProxyPassword != "" {
-		contentStr = contentStr +
-			"\nBasicAuth " + core.GlobalConfig.ProxyUsername +
-			" " + core.GlobalConfig.ProxyPassword
-	}
-
-	err = os.WriteFile(p.configFile, []byte(contentStr), 0644)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return `"` + strings.ReplaceAll(value, `"`, `""`) + `"`, nil
 }
 
-func updateSocksProxyConfig(p *ProxyModule) error {
-	vpnDev := core.GetVpnDevice()
-	if vpnDev == "" {
-		return errors.New("VPN device not found")
+func renderProxyConfig(proxyType ProxyType, listenAddr, bindAddr, logFile, username, password string) (string, error) {
+	if listenAddr == "" || bindAddr == "" {
+		return "", errors.New("listen or bind address not found")
 	}
 
-	content, err := os.ReadFile("/usr/local/etc/sockd.conf")
+	quotedLogFile, err := quoteConfigValue(logFile)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	contentStr := string(content)
-
-	externalRegex := regexp.MustCompile(`external: .*`)
-	contentStr = externalRegex.ReplaceAllString(contentStr, "external: "+vpnDev)
-
-	if core.GlobalConfig.ProxyUsername != "" && core.GlobalConfig.ProxyPassword != "" {
-		utils.CreateUser(core.GlobalConfig.ProxyUsername)
-		contentStr = strings.Replace(contentStr, "socksmethod: none", "socksmethod: username", 1)
+	lines := []string{
+		"log " + quotedLogFile,
+		"timeouts 1 5 30 60 180 1800 15 60 15 5",
+		"maxconn 100",
+		"internal " + listenAddr,
+		"external " + bindAddr,
 	}
 
-	err = os.WriteFile(p.configFile, []byte(contentStr), 0644)
-	if err != nil {
-		return err
+	if username != "" && password != "" {
+		credentials, err := quoteConfigValue(username + ":CL:" + password)
+		if err != nil {
+			return "", err
+		}
+		lines = append(lines, "users "+credentials, "auth strong", "allow *")
+	} else {
+		lines = append(lines, "auth none")
 	}
 
-	return nil
+	switch proxyType {
+	case HttpProxy:
+		lines = append(lines, "proxy -p3128")
+	case SocksProxy:
+		lines = append(lines, "socks -p1080")
+	default:
+		return "", fmt.Errorf("unknown proxy type %d", proxyType)
+	}
+
+	return strings.Join(lines, "\n") + "\n", nil
 }
 
 func updateProxyConfig(p *ProxyModule) error {
-	if p.proxyType == HttpProxy {
-		return updateHttpProxyConfig(p)
-	} else if p.proxyType == SocksProxy {
-		return updateSocksProxyConfig(p)
+	vpnDev := core.GetVpnDevice()
+	if vpnDev == "" {
+		return errors.New("VPN device not found")
 	}
-	return nil
+
+	content, err := renderProxyConfig(
+		p.proxyType,
+		utils.GetIpV4Addr("eth0", true),
+		utils.GetIpV4Addr(vpnDev, true),
+		strings.TrimSuffix(p.configFile, ".cfg")+".log",
+		core.GlobalConfig.ProxyUsername,
+		core.GlobalConfig.ProxyPassword,
+	)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(p.configFile, []byte(content), 0600)
 }
