@@ -1,3 +1,6 @@
+## [0.3.0]
+* Improve WebUI status stream recovery and IP info refresh consistency.
+
 ## [0.2.0]
 * Upgrade the bundled 3proxy HTTP and SOCKS5 services to 0.9.7.
 * Fix container builds failing because of a stale runtime template copy.
