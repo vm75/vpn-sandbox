@@ -75,8 +75,8 @@ Do not publish or commit generated credentials, private keys, `.auth` files, or 
 The release workflow builds:
 
 - `linux/amd64`
-- `linux/arm64`
-- `linux/arm/v7`
+<!-- - `linux/arm64` -->
+<!-- - `linux/arm/v7` -->
 
 ## Compose and local builds
 

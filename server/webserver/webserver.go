@@ -18,10 +18,12 @@ import (
 type IpInfo map[string]interface{}
 
 var (
-	staticDir        = "./static"
-	ipInfo           = &ipInfoCache{}
-	nwChangedChannel = make(chan string, 1) // Status updates are coalesced.
+	staticDir     = "./static"
+	ipInfo        = &ipInfoCache{}
+	statusUpdates = newStatusNotifier()
 )
+
+const statusHeartbeatInterval = 15 * time.Second
 
 type ipInfoStatus struct {
 	Output     IpInfo     `json:"output"`
@@ -42,6 +44,39 @@ type ipInfoCache struct {
 }
 
 type statusEventListener struct{}
+
+type statusNotifier struct {
+	mu          sync.RWMutex
+	subscribers map[chan string]struct{}
+}
+
+func newStatusNotifier() *statusNotifier {
+	return &statusNotifier{subscribers: make(map[chan string]struct{})}
+}
+
+func (n *statusNotifier) subscribe() (<-chan string, func()) {
+	updates := make(chan string, 1)
+	n.mu.Lock()
+	n.subscribers[updates] = struct{}{}
+	n.mu.Unlock()
+
+	return updates, func() {
+		n.mu.Lock()
+		delete(n.subscribers, updates)
+		n.mu.Unlock()
+	}
+}
+
+func (n *statusNotifier) notify(event string) {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	for subscriber := range n.subscribers {
+		select {
+		case subscriber <- event:
+		default:
+		}
+	}
+}
 
 func (i *ipInfoCache) markEvent(name string, at time.Time) {
 	i.mu.Lock()
@@ -102,10 +137,7 @@ func (i *ipInfoCache) refresh() bool {
 }
 
 func notifyStatus(event string) {
-	select {
-	case nwChangedChannel <- event:
-	default:
-	}
+	statusUpdates.notify(event)
 }
 
 func (statusEventListener) HandleEvent(event utils.Event) {
@@ -153,22 +185,41 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("X-Accel-Buffering", "no")
 
-	// Create a channel to close the connection on client disconnect
-	clientGone := r.Context().Done()
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	updates, unsubscribe := statusUpdates.subscribe()
+	defer unsubscribe()
 
 	data, _ := json.Marshal(getStatus())
-	fmt.Fprintf(w, "data: %s\n\n", data)
-	w.(http.Flusher).Flush() // Ensure data is sent immediately
+	if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+		return
+	}
+	flusher.Flush()
+
+	heartbeat := time.NewTicker(statusHeartbeatInterval)
+	defer heartbeat.Stop()
 
 	for {
 		select {
-		case event := <-nwChangedChannel: // Receive new status from the channel
+		case event := <-updates:
 			utils.LogLn("Received event:", event)
 			data, _ := json.Marshal(getStatus())
-			fmt.Fprintf(w, "data: %s\n\n", data)
-			w.(http.Flusher).Flush() // Ensure data is sent immediately
-		case <-clientGone: // Client disconnected
+			if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+				return
+			}
+			flusher.Flush()
+		case <-heartbeat.C:
+			if _, err := fmt.Fprint(w, ": keepalive\n\n"); err != nil {
+				return
+			}
+			flusher.Flush()
+		case <-r.Context().Done():
 			return
 		}
 	}
@@ -176,13 +227,14 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 
 func forceRefreshHandler(w http.ResponseWriter, _ *http.Request) {
 	ipInfo.markEvent("force", time.Now())
-	notifyStatus("force")
 	if !ipInfo.refresh() {
+		notifyStatus("force")
 		http.Error(w, "failed to refresh IP info", http.StatusBadGateway)
 		return
 	}
 	notifyStatus("ip-info")
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ipInfo.snapshot())
 }
 
 func versionHandler(w http.ResponseWriter, _ *http.Request) {

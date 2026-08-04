@@ -61,10 +61,10 @@ jobs:
           driver: docker-container
           driver-opts: image=moby/buildkit:latest
 
-      - name: Set up cross-platform builder
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
+      # - name: Set up cross-platform builder
+      #   uses: docker/setup-qemu-action@v3
+      #   with:
+      #     platforms: all
 
       - name: Build and Push
         id: push
@@ -84,7 +84,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.version }}
             ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.major }}
             ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.minor }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/amd64 # ,linux/arm64,linux/arm/v7
 
       - name: Verify published image
         run: docker pull docker.io/${{ env.IMAGE_NAME }}:${{ env.version }}

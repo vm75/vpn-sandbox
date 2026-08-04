@@ -388,7 +388,15 @@ export default {
       this.ipInfo = status.ipInfo;
     },
     async forceRefresh() {
-      fetch(`/api/force-refresh`);
+      try {
+        const response = await fetch(`/api/force-refresh`);
+        if (!response.ok) {
+          throw new Error(`IP info refresh failed with status ${response.status}`);
+        }
+        this.ipInfo = await response.json();
+      } catch (error) {
+        console.error("Error refreshing IP info:", error);
+      }
     },
     toggleModule: function (module) {
       this[module].config.enabled = !this[module].config.enabled;
@@ -505,7 +513,7 @@ export default {
       })
       .catch(error => console.error("Error loading version:", error));
 
-    const eventSource = new EventSource("api/status");
+    const eventSource = new EventSource("/api/status");
 
     eventSource.onmessage = (event) => {
       try {
@@ -519,12 +527,14 @@ export default {
 
     eventSource.onerror = (error) => {
       console.error("SSE connection error:", error);
-      // Optionally close the EventSource on error
-      eventSource.close();
     };
 
-    // Save the EventSource instance if you want to close it later
     this.eventSource = eventSource;
+  },
+  beforeUnmount() {
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
   }
 }
 </script>
