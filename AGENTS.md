@@ -1,14 +1,14 @@
 # VPN Sandbox agent guide
 
-VPN Sandbox is a Go daemon and web UI packaged as an Alpine container. It routes container traffic through a configured OpenVPN or WireGuard tunnel and can run 3proxy HTTP and SOCKS5 proxies. Real tunnel operation changes routes, DNS, and iptables rules and requires `NET_ADMIN` plus `/dev/net/tun`.
+VPN Sandbox is a Python daemon and web UI packaged as a Debian Bookworm container. It routes container traffic through a configured OpenVPN or WireGuard tunnel and can run 3proxy HTTP and SOCKS5 proxies. Real tunnel operation changes routes, DNS, and iptables rules and requires `NET_ADMIN` plus `/dev/net/tun`.
 
 ## Repository map
 
-- `server/main.go` — daemon startup, CLI flags, OpenVPN script mode, and signals.
+- `server/main.py` — daemon startup, CLI flags, OpenVPN script mode, and signals.
 - `server/core/` — shared paths, SQLite database, global configuration, and module registry.
 - `server/actions/` — VPN up/down DNS, route, firewall, and app-script side effects.
-- `server/modules/openvpn/`, `wireguard/` — tunnel configuration and lifecycle.
-- `server/modules/proxy/` — 3proxy HTTP and SOCKS5 configuration and lifecycle.
+- `server/modules/openvpn.py`, `wireguard.py` — tunnel configuration and lifecycle.
+- `server/modules/proxy.py` — 3proxy HTTP and SOCKS5 configuration and lifecycle.
 - `server/webserver/` — REST/SSE API and static-file serving.
 - `server/static/` — Vue 3 components loaded from CDN assets; `component-load.js` defines the SFC loading rules.
 - `usr/local/etc/` — source templates for proxy configuration.
@@ -28,14 +28,12 @@ make run                           # start the example Compose stack
 make logs                          # follow the vpn container logs
 make stop                          # stop the stack
 make clean                         # remove the stack
-cd server && go test ./...         # all Go tests
-cd server && go test ./utils -run '^TestArgParse$'
-cd server && CGO_ENABLED=1 go build .
+cd server && python3 -m unittest discover . # run tests
 ```
 
 The Makefile currently uses Podman and Podman Compose. Docker-compatible tools can use the same `Containerfile` and `compose.yml.example` with their equivalent commands. The manual harness uses Docker and requires a privileged container namespace: `make test-start` and `make test-stop`.
 
-The daemon accepts `--data`/`-d` (default `/data`), `--port`/`-p` (default `80`), `--test`, and `--sudo`. Go requires version `1.26.5` as declared in `server/go.mod`; CGO is required by SQLite.
+The daemon accepts `--data`/`-d` (default `/data`), `--port`/`-p` (default `80`), `--test`, and `--sudo`. Python requires version `3.11` as declared in `Containerfile` and `server/requirements.txt`.
 
 ## Boundaries and invariants
 
@@ -53,7 +51,7 @@ The daemon accepts `--data`/`-d` (default `/data`), `--port`/`-p` (default `80`)
 
 Keep changes small and apply KISS/YAGNI. Search before broad reads, preserve existing conventions, and inspect only task-relevant files. Use `gofmt` for changed Go files; there is no frontend package manager or configured JS formatter. Add focused tests for behavior changes where practical, and use the isolated harness for network behavior.
 
-Update only documentation whose truth changed. Review `README.md` for user-facing or deployment changes, `ARCHITECTURE.md` for component/data-flow changes, and this file for agent workflow, commands, or safety constraints. Review `CHANGELOG.md` only for a user-visible release entry.
+Update only documentation whose truth changed. Review `README.md` for user-facing or deployment changes, `ARCHITECTURE.md` for component/data-flow changes, `DOCKERHUB.md` for published image or release workflow changes, and this file for agent workflow, commands, or safety constraints. Review `CHANGELOG.md` only for a user-visible release entry.
 
 ## Definition of done
 

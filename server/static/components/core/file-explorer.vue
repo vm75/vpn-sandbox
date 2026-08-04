@@ -22,7 +22,7 @@
 
     <!-- Right Pane: File Viewer -->
     <div class="column is-9">
-      <div class="box" style="height: 30em; overflow-y: auto;">
+      <div class="box" style="height: 30em; overflow-y: auto;" ref="fileViewer">
         <div v-if="loading" class="has-text-centered">
           <p>Loading...</p>
         </div>
@@ -63,7 +63,8 @@ export default {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        this.fileTree = await response.json();
+        const data = await response.json();
+        this.fileTree = data.sort((a, b) => a.name.localeCompare(b.name));
       } catch (error) {
         console.error('Error fetching file tree:', error);
       }
@@ -81,6 +82,11 @@ export default {
         console.error('Error fetching file content:', error);
       } finally {
         this.loading = false;
+        this.$nextTick(() => {
+          if (this.$refs.fileViewer) {
+            this.$refs.fileViewer.scrollTop = this.$refs.fileViewer.scrollHeight;
+          }
+        });
       }
     },
   },

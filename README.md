@@ -11,7 +11,7 @@
 
 </div>
 
-VPN Sandbox is an open-source Alpine container that routes traffic through a configured OpenVPN or WireGuard tunnel. It provides an optional web UI, HTTP proxy, SOCKS5 proxy, DNS-leak and direct-LAN protections, and an optional `/data/apps.sh` hook for applications that should follow VPN state.
+VPN Sandbox is an open-source Debian Python 3.11 Bookworm container that routes traffic through a configured OpenVPN or WireGuard tunnel. It provides an optional web UI, HTTP proxy, SOCKS5 proxy, DNS-leak and direct-LAN protections, and an optional `/data/apps.sh` hook for applications that should follow VPN state.
 
 ## Requirements
 

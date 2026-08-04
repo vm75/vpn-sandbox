@@ -1,3 +1,7 @@
+## [0.4.0]
+* Migrate backend daemon architecture from Go to Python 3.11 (`python:3.11-slim-bookworm`).
+* Sort runtime files alphabetically and auto-scroll content view on selection in WebUI file explorer.
+
 ## [0.3.0]
 * Improve WebUI status stream recovery and IP info refresh consistency.
 

@@ -8,7 +8,7 @@ run:
 	podman compose -f compose.yml.example up -d
 
 clean:
-	podman compose -f compose.yml.example down
+	podman compose -f data/compose.yml down
 
 start:
 	podman compose start

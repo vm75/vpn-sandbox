@@ -7,4 +7,5 @@ var/
 compose.yml
 .env
 
+volumes/
 __pycache__
