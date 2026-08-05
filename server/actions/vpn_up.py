@@ -1,7 +1,8 @@
 import os
 import json
-from utils import log_ln, log_error, run_command, run_command_logged, publish_event, Event
+from utils import log_ln, log_error, run_command, publish_event, Event
 import core
+from .apps import run_legacy_app_script, run_managed_apps_action
 
 class NetSpec:
     def __init__(self, dev="", domains=None, dns=None, vpn_gateway="", vpn_endpoint=""):
@@ -132,7 +133,6 @@ def vpn_up(net_spec=None):
     log_ln("Triggering vpn-up actions")
     publish_event(Event("vpn-up", {"dev": net_spec.dev}))
     
-    log_ln("Starting apps script")
-    err = run_command_logged(False, core.AppScript, "up")
-    if err:
-        log_error("Error starting apps script", err)
+    log_ln("Starting app lifecycle hooks")
+    run_legacy_app_script("up")
+    run_managed_apps_action("up")

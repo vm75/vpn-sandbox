@@ -60,7 +60,7 @@
                     rows="3">
                   </textarea>
                 </div>
-                <p class="help">Runs once on first container start (setup phase)</p>
+                <p class="help">Runs when first saved or changed, and once per new container</p>
               </div>
             </div>
           </div>

@@ -1,3 +1,6 @@
+## [0.5.2]
+* Run configurable app setup/up/down commands directly from the daemon without modifying the optional user-managed `apps.sh` hook.
+
 ## [0.5.1]
 * Make IP info refresh asynchronous on events to prevent blocking SIGTERM shutdown.
 

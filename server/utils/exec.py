@@ -26,21 +26,24 @@ def run_command(is_elevated, command, *args):
     except Exception as e:
         return "", e
 
-def run_command_logged(is_elevated, command, *args):
+def run_command_logged(is_elevated, command, *args, log_command=True):
     cmd_args = list(args)
     if is_elevated or use_sudo:
         cmd_args.insert(0, command)
         command = "sudo"
     
-    log_ln(f"Running: {command} {' '.join(cmd_args)}")
+    if log_command:
+        log_ln(f"Running: {command} {' '.join(cmd_args)}")
     
     try:
-        subprocess.run(
+        result = subprocess.run(
             [command] + cmd_args,
             stdout=get_log_file(),
             stderr=get_log_file(),
             preexec_fn=os.setsid
         )
+        if result.returncode != 0:
+            return subprocess.CalledProcessError(result.returncode, [command] + cmd_args)
         return None
     except Exception as e:
         return e

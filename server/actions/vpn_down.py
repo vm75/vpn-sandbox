@@ -1,14 +1,14 @@
-from utils import log_ln, log_error, run_command_logged, run_command, publish_event_sync, Event, restore_resolv_conf
+from utils import log_ln, run_command, publish_event_sync, Event, restore_resolv_conf
 import core
+from .apps import run_legacy_app_script, run_managed_apps_action
 
 def vpn_down():
     log_ln("VpnDown: Entry")
     
     if not core.Testing:
-        log_ln("Stopping apps script")
-        err = run_command_logged(False, core.AppScript, "down")
-        if err:
-            log_error("Error stopping apps script", err)
+        log_ln("Stopping app lifecycle hooks")
+        run_legacy_app_script("down")
+        run_managed_apps_action("down")
             
     log_ln("Triggering vpn down actions")
     publish_event_sync(Event("vpn-down", {}))

@@ -54,7 +54,7 @@ The persistent volume has this shape:
 └── apps.sh               # optional executable hook
 ```
 
-If present, `apps.sh` receives `setup` once on first initialization, then `up` after VPN activation and `down` when it stops. The script runs inside the container and is responsible for installing or starting any custom applications it needs.
+If present, the user-managed `apps.sh` receives `setup` once on first initialization, then `up` after VPN activation and `down` when it stops. Apps configured in the web UI are stored separately and the daemon runs their command lists directly: setup when an app is first saved or its setup changes and once per new container, then up/down with VPN state. Managed apps never create or modify `apps.sh`. All commands run inside the container.
 
 ## Development and tests
 

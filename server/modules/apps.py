@@ -1,9 +1,7 @@
-import os
-import stat
 import threading
-import core
-from core import Module, get_apps, get_app, save_app, delete_app, register_module
-from utils import log_ln, log_error, publish_event, Event
+from core import Module, get_apps, get_app, save_app, delete_app, register_module, is_vpn_up
+from actions import run_managed_apps_action
+from utils import publish_event, Event
 
 _apps_mutex = threading.Lock()
 
@@ -16,65 +14,6 @@ def _default_app():
         "upCommands": [],
         "downCommands": [],
     }
-
-
-def _generate_apps_sh(apps):
-    """Generate the apps.sh shell script from the given list of app configs."""
-    lines = ["#!/bin/sh", "", "case \"$1\" in"]
-
-    # setup case — all apps
-    lines.append("  setup)")
-    for app in apps:
-        for cmd in app.get("setupCommands", []):
-            cmd = cmd.strip()
-            if cmd:
-                lines.append(f"    {cmd}")
-    lines.append("    ;;")
-
-    # up case — enabled apps only
-    lines.append("  up)")
-    for app in apps:
-        if not app.get("enabled", True):
-            continue
-        for cmd in app.get("upCommands", []):
-            cmd = cmd.strip()
-            if cmd:
-                lines.append(f"    {cmd}")
-    lines.append("    ;;")
-
-    # down case — enabled apps only
-    lines.append("  down)")
-    for app in apps:
-        if not app.get("enabled", True):
-            continue
-        for cmd in app.get("downCommands", []):
-            cmd = cmd.strip()
-            if cmd:
-                lines.append(f"    {cmd}")
-    lines.append("    ;;")
-
-    lines.append("esac")
-    lines.append("")
-    return "\n".join(lines)
-
-
-def regenerate_apps_sh():
-    """Rebuild core.AppScript from all DB-stored apps."""
-    apps, err = get_apps()
-    if err:
-        log_error("Error loading apps from DB", err)
-        return err
-
-    content = _generate_apps_sh(apps)
-    try:
-        with open(core.AppScript, "w") as f:
-            f.write(content)
-        os.chmod(core.AppScript, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
-        log_ln(f"Regenerated {core.AppScript} with {len(apps)} app(s)")
-    except Exception as e:
-        log_error("Error writing apps.sh", e)
-        return e
-    return None
 
 
 class AppsModule(Module):
@@ -128,22 +67,54 @@ class AppsModule(Module):
                 "downCommands": config.get("downCommands", []),
             })
             with _apps_mutex:
+                previous, previous_err = get_app(name)
+                if previous_err is None and previous == app:
+                    return "", 200
+
+                vpn_is_up = is_vpn_up()
+                previous_was_running = bool(
+                    previous_err is None
+                    and previous.get("enabled", True)
+                    and vpn_is_up
+                )
+                if previous_was_running:
+                    err = run_managed_apps_action("down", [previous])
+                    if err:
+                        return str(err), 500
+
+                setup_changed = (
+                    previous_err is not None
+                    or previous.get("setupCommands", []) != app["setupCommands"]
+                )
+                if setup_changed:
+                    err = run_managed_apps_action("setup", [app])
+                    if err:
+                        if previous_was_running:
+                            run_managed_apps_action("up", [previous])
+                        return str(err), 500
+
                 save_app(name, app)
-                err = regenerate_apps_sh()
-            if err:
-                return str(err), 500
+                if app["enabled"] and vpn_is_up:
+                    err = run_managed_apps_action("up", [app])
+                    if err:
+                        publish_event(Event("apps-changed", {"name": name}))
+                        return str(err), 500
             publish_event(Event("apps-changed", {"name": name}))
             return "", 200
 
         @flask_app.route("/api/apps/<string:name>/delete", methods=["POST"])
         def delete_app_handler(name):
             with _apps_mutex:
+                app, err = get_app(name)
+                if err:
+                    return "app not found", 404
+                if app.get("enabled", True) and is_vpn_up():
+                    err = run_managed_apps_action("down", [app])
+                    if err:
+                        return str(err), 500
                 deleted = delete_app(name)
                 if not deleted:
                     return "app not found", 404
-                err = regenerate_apps_sh()
-            if err:
-                return str(err), 500
             publish_event(Event("apps-changed", {"name": name}))
             return "", 200
 
@@ -160,11 +131,17 @@ class AppsModule(Module):
                 app, err = get_app(name)
                 if err:
                     return str(err), 404
+                if app.get("enabled", True) == enabled:
+                    return "", 200
+                if is_vpn_up():
+                    action = "up" if enabled else "down"
+                    action_app = dict(app)
+                    action_app["enabled"] = True
+                    err = run_managed_apps_action(action, [action_app])
+                    if err:
+                        return str(err), 500
                 app["enabled"] = enabled
                 save_app(name, app)
-                err = regenerate_apps_sh()
-            if err:
-                return str(err), 500
             publish_event(Event("apps-changed", {"name": name}))
             return "", 200
 
@@ -176,12 +153,3 @@ def init_apps_module():
     global _module_instance
     _module_instance = AppsModule()
     register_module("apps", _module_instance)
-
-    # If there are DB-managed apps, regenerate apps.sh now. If DB is empty and
-    # a hand-written apps.sh already exists on disk, leave it intact so existing
-    # setups are not broken on first upgrade.
-    apps, _ = get_apps()
-    if apps:
-        regenerate_apps_sh()
-    else:
-        log_ln("No DB apps found; leaving existing apps.sh (if any) unchanged")
