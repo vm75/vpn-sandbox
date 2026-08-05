@@ -55,11 +55,24 @@ def get_ip_info(ip_info_dict):
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
+        
         req = urllib.request.Request("https://ipinfo.io/json")
         with urllib.request.urlopen(req, context=ctx, timeout=10) as response:
             out = response.read().decode('utf-8')
+            
         ip_info_dict.clear()
         ip_info_dict.update(json.loads(out))
+        
+        try:
+            req_dns = urllib.request.Request("https://edns.ip-api.com/json")
+            with urllib.request.urlopen(req_dns, context=ctx, timeout=10) as response_dns:
+                out_dns = response_dns.read().decode('utf-8')
+                dns_info = json.loads(out_dns)
+                if 'dns' in dns_info:
+                    ip_info_dict['dns'] = dns_info['dns']
+        except Exception as e:
+            log_error("Error getting dns leak info", e)
+            
         return None
     except Exception as e:
         log_error("Error getting ip info", e)

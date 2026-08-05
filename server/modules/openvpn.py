@@ -6,6 +6,7 @@ import core
 from core import Module, get_config, save_config, register_module, get_db
 from utils import log_ln, log_f, log_error, file_exists, start_command, is_running, run_command, update_content
 from core import get_module
+from actions import vpn_down
 
 ModuleName = "openvpn"
 
@@ -52,41 +53,17 @@ class Server:
         self.endpoints = endpoints
 
 def init_db():
-    cursor = get_db().cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS openvpnServers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            template TEXT NOT NULL,
-            hasParams BOOLEAN NOT NULL,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL,
-            endpoints JSON NOT NULL
-        )
-    """)
-    get_db().commit()
+    pass
 
 def get_openvpn_servers():
-    cursor = get_db().cursor()
-    cursor.execute("SELECT name, template, hasParams, username, password, endpoints FROM openvpnServers")
-    servers = []
-    for row in cursor.fetchall():
-        servers.append({
-            "name": row[0],
-            "template": row[1],
-            "hasParams": bool(row[2]),
-            "username": row[3],
-            "password": row[4],
-            "endpoints": json.loads(row[5])
-        })
-    return servers
+    cfg, err = get_config("openvpnServers")
+    return cfg if cfg else []
 
 def get_openvpn_server(name):
-    cursor = get_db().cursor()
-    cursor.execute("SELECT name, template, hasParams, username, password, endpoints FROM openvpnServers WHERE name = ?", (name,))
-    row = cursor.fetchone()
-    if row:
-        return Server(row[0], row[1], bool(row[2]), row[3], row[4], json.loads(row[5]))
+    servers = get_openvpn_servers()
+    for s in servers:
+        if s["name"] == name:
+            return Server(s["name"], s["template"], s["hasParams"], s.get("username", ""), s.get("password", ""), s["endpoints"])
     return None
 
 def save_openvpn_server(data):
@@ -98,18 +75,32 @@ def save_openvpn_server(data):
             seen.add(name)
             endpoints.append(ep)
             
-    cursor = get_db().cursor()
-    cursor.execute("""
-        INSERT OR REPLACE INTO openvpnServers (name, template, hasParams, username, password, endpoints)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (data.get("name"), data.get("template"), bool(data.get("hasParams")), data.get("username", ""), data.get("password", ""), json.dumps(endpoints)))
-    get_db().commit()
+    new_server = {
+        "name": data.get("name"),
+        "template": data.get("template"),
+        "hasParams": bool(data.get("hasParams")),
+        "username": data.get("username", ""),
+        "password": data.get("password", ""),
+        "endpoints": endpoints
+    }
+    
+    servers = get_openvpn_servers()
+    updated = False
+    for i, s in enumerate(servers):
+        if s["name"] == new_server["name"]:
+            servers[i] = new_server
+            updated = True
+            break
+    if not updated:
+        servers.append(new_server)
+        
+    save_config("openvpnServers", servers)
     return None
 
 def delete_server(name):
-    cursor = get_db().cursor()
-    cursor.execute("DELETE FROM openvpnServers WHERE name = ?", (name,))
-    get_db().commit()
+    servers = get_openvpn_servers()
+    servers = [s for s in servers if s["name"] != name]
+    save_config("openvpnServers", servers)
     return None
 
 def save_ovpn_config():
@@ -147,6 +138,7 @@ def save_ovpn_config():
     return None
 
 def kill_openvpn():
+    vpn_down()
     run_command(False, "/usr/bin/pkill", "-15", "-x", "openvpn")
 
 def run_openvpn():

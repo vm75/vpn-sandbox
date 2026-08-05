@@ -1,4 +1,4 @@
-from utils import log_ln, log_error, run_command_logged, run_command, publish_event, Event, restore_resolv_conf
+from utils import log_ln, log_error, run_command_logged, run_command, publish_event_sync, Event, restore_resolv_conf
 import core
 
 def vpn_down():
@@ -11,7 +11,7 @@ def vpn_down():
             log_error("Error stopping apps script", err)
             
     log_ln("Triggering vpn down actions")
-    publish_event(Event("vpn-down", {}))
+    publish_event_sync(Event("vpn-down", {}))
     
     log_ln("Restoring resolv.conf")
     restore_resolv_conf()

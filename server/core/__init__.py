@@ -1,7 +1,7 @@
 import os
 import signal
 from utils import init_signals, real_time_signal, init_log, get_host_gateway, publish_event, Event
-from .db import init_db, get_config, save_config, get_db
+from .db import init_db, get_config, save_config, get_db, get_apps, get_app, save_app, delete_app
 from .module import Module, get_modules, get_module, register_module, enable_module, disable_module, restart_module, get_module_config, save_module_config, get_module_status
 
 DataDir = ""

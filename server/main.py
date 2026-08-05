@@ -5,7 +5,7 @@ from utils import log_ln, log_f, log_fatal, init_log, backup_resolv_conf, smart_
 import core
 from core import init_core, OpenVPNAction, WebServer, SHUTDOWN, VPN_UP, VPN_DOWN
 from actions import save_openvpn_spec, vpn_up, vpn_down
-from modules import init_openvpn, init_wireguard, init_proxy_module, HttpProxy, SocksProxy, openvpn_shutdown, wireguard_shutdown
+from modules import init_openvpn, init_wireguard, init_proxy_module, HttpProxy, SocksProxy, openvpn_shutdown, wireguard_shutdown, init_apps_module
 from webserver.webserver import start_webserver
 
 def one_time_setup():
@@ -60,6 +60,9 @@ def main():
             log_ln("Signaling vpn up to main process")
             signal_running(core.ServerPidFile, VPN_UP)
         elif script_type == "down":
+            if not core.Testing and os.path.exists(core.AppScript):
+                log_ln("Stopping apps script synchronously")
+                run_command_logged(False, core.AppScript, "down")
             log_ln("Signaling vpn down to main process")
             signal_running(core.ServerPidFile, VPN_DOWN)
         sys.exit(0)
@@ -73,7 +76,7 @@ def main():
         elif sig == SHUTDOWN:
             openvpn_shutdown()
             wireguard_shutdown()
-            sys.exit(0)
+            os._exit(0)
             
     add_signal_handler([VPN_UP, VPN_DOWN, SHUTDOWN], handle_signal)
     
@@ -86,6 +89,7 @@ def main():
     init_proxy_module(SocksProxy)
     init_openvpn()
     init_wireguard()
+    init_apps_module()
     
     start_webserver(options["--port"].get_value())
 

@@ -29,42 +29,17 @@ class WireguardConfig:
 wireguard_config = WireguardConfig()
 
 def init_db():
-    cursor = get_db().cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS wireguardServers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            template TEXT NOT NULL,
-            hasParams BOOLEAN NOT NULL,
-            endpoints JSON NOT NULL
-        )
-    """)
-    get_db().commit()
+    pass
 
 def get_wireguard_servers():
-    cursor = get_db().cursor()
-    cursor.execute("SELECT name, template, hasParams, endpoints FROM wireguardServers")
-    servers = []
-    for row in cursor.fetchall():
-        servers.append({
-            "name": row[0],
-            "template": row[1],
-            "hasParams": bool(row[2]),
-            "endpoints": json.loads(row[3])
-        })
-    return servers
+    cfg, err = get_config("wireguardServers")
+    return cfg if cfg else []
 
 def get_wireguard_server(name):
-    cursor = get_db().cursor()
-    cursor.execute("SELECT name, template, hasParams, endpoints FROM wireguardServers WHERE name = ?", (name,))
-    row = cursor.fetchone()
-    if row:
-        return {
-            "name": row[0],
-            "template": row[1],
-            "hasParams": bool(row[2]),
-            "endpoints": json.loads(row[3])
-        }
+    servers = get_wireguard_servers()
+    for s in servers:
+        if s["name"] == name:
+            return s
     return None
 
 def save_wireguard_server(data):
@@ -76,18 +51,30 @@ def save_wireguard_server(data):
             seen.add(name)
             endpoints.append(ep)
             
-    cursor = get_db().cursor()
-    cursor.execute("""
-        INSERT OR REPLACE INTO wireguardServers (name, template, hasParams, endpoints)
-        VALUES (?, ?, ?, ?)
-    """, (data.get("name"), data.get("template"), bool(data.get("hasParams")), json.dumps(endpoints)))
-    get_db().commit()
+    new_server = {
+        "name": data.get("name"),
+        "template": data.get("template"),
+        "hasParams": bool(data.get("hasParams")),
+        "endpoints": endpoints
+    }
+    
+    servers = get_wireguard_servers()
+    updated = False
+    for i, s in enumerate(servers):
+        if s["name"] == new_server["name"]:
+            servers[i] = new_server
+            updated = True
+            break
+    if not updated:
+        servers.append(new_server)
+        
+    save_config("wireguardServers", servers)
     return None
 
 def delete_server(name):
-    cursor = get_db().cursor()
-    cursor.execute("DELETE FROM wireguardServers WHERE name = ?", (name,))
-    get_db().commit()
+    servers = get_wireguard_servers()
+    servers = [s for s in servers if s["name"] != name]
+    save_config("wireguardServers", servers)
     return None
 
 def is_tunnel_up():
@@ -176,11 +163,11 @@ def tunnel_up():
     ),)).start()
 
 def tunnel_down():
+    vpn_down()
     run_command(False, "/sbin/ip", "link", "set", "down", "dev", "wg0")
     run_command(False, "/sbin/ip", "link", "del", "dev", "wg0")
     if is_tunnel_up():
         log_ln("Tunnel down failed")
-    vpn_down()
 
 class WireguardModule(Module):
     def register_routes(self, app):

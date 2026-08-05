@@ -5,7 +5,7 @@ VPN Sandbox is a Python daemon and web UI packaged as a Debian Bookworm containe
 ## Repository map
 
 - `server/main.py` — daemon startup, CLI flags, OpenVPN script mode, and signals.
-- `server/core/` — shared paths, SQLite database, global configuration, and module registry.
+- `server/core/` — shared paths, JSON state, global configuration, and module registry.
 - `server/actions/` — VPN up/down DNS, route, firewall, and app-script side effects.
 - `server/modules/openvpn.py`, `wireguard.py` — tunnel configuration and lifecycle.
 - `server/modules/proxy.py` — 3proxy HTTP and SOCKS5 configuration and lifecycle.
@@ -37,8 +37,8 @@ The daemon accepts `--data`/`-d` (default `/data`), `--port`/`-p` (default `80`)
 
 ## Boundaries and invariants
 
-- Use `core.DataDir`, `ConfigDir`, `VarDir`, and `AppScript` for daemon paths. Persistent state is `/data/config/vpn-sandbox.db`; generated files, logs, PID files, and credentials are under `/data/var`.
-- Initialize SQLite tables with `CREATE TABLE IF NOT EXISTS` and use the shared `core.Db`.
+- Use `core.DataDir`, `ConfigDir`, `VarDir`, and `AppScript` for daemon paths. Persistent state is `/data/config/settings.json`; generated files, logs, PID files, and credentials are under `/data/var`.
+- Manage state with the generic `save_config` and `get_config` in `core.db`.
 - Register modules through `core.RegisterModule` and implement `core.Module`.
 - Preserve the event flow: VPN and global-configuration events are asynchronous; proxies follow VPN state.
 - OpenVPN up/down hooks invoke this executable in script mode and signal the main process. WireGuard invokes the same VPN actions directly.

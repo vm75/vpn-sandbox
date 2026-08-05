@@ -270,6 +270,7 @@ def serve_static(path):
 def start_webserver(port):
     register_listener(["vpn-up", "vpn-down"], ip_info)
     register_listener(["proxy-up", "proxy-down"], StatusEventListener())
+    register_listener(["apps-changed"], StatusEventListener())
     
     ip_info.mark_event("startup", datetime.now())
     threading.Thread(target=lambda: notify_status("ip-info") if ip_info.refresh() else None).start()

@@ -2,30 +2,45 @@
   <confirm-delete :show="removeIndex !== null" :itemName="removeItemName" @cancel="cancelRemoveItem"
     @confirm="confirmRemoveItem">
   </confirm-delete>
-  <table v-if="listLocal.length > 0" class="table is-striped is-fullwidth">
-    <thead>
-      <tr>
-        <th>Actions</th>
-        <th>{{ name }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(item, arrIndex) in listLocal" :key="arrIndex">
-        <td>
-          <button type="button" class="button is-rounded is-small is-info is-light" @click="editItemLocal(arrIndex)">
-            ✎
-          </button>
-          <button type="button" class="button is-rounded is-small is-danger is-light" @click="removeItemLocal(arrIndex)">
-            🗑
-          </button>
-        </td>
-        <td>
-          {{ getDisplayString(arrIndex) }}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <button type="button" class="button is-small is-info" @click="addItemLocal()">➕</button>
+  <div v-if="listLocal.length > 0" class="b-table mb-4">
+    <table class="table is-fullwidth is-hoverable align-middle" style="background-color: transparent;">
+      <thead>
+        <tr>
+          <th class="has-text-grey-light is-uppercase is-size-7" style="border-bottom: 2px solid #f0f0f0;">{{ name }}</th>
+          <th class="has-text-grey-light is-uppercase is-size-7 has-text-right" style="border-bottom: 2px solid #f0f0f0; width: 120px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(item, arrIndex) in listLocal" :key="arrIndex" style="transition: background-color 0.2s;">
+          <td class="has-text-weight-medium is-vcentered">
+            <div class="is-flex is-align-items-center">
+              <span class="icon has-text-primary mr-3"><i class="fas fa-hdd"></i></span>
+              {{ getDisplayString(arrIndex) }}
+            </div>
+          </td>
+          <td class="has-text-right is-vcentered">
+            <button type="button" class="button is-small is-light is-info is-rounded mr-2" @click="editItemLocal(arrIndex)" title="Edit">
+              <span class="icon"><i class="fas fa-edit"></i></span>
+            </button>
+            <button type="button" class="button is-small is-light is-danger is-rounded" @click="removeItemLocal(arrIndex)" title="Delete">
+              <span class="icon"><i class="fas fa-trash-alt"></i></span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div v-else class="notification is-light has-text-centered my-5" style="border-radius: 8px;">
+    <div class="icon has-text-grey-light is-large mb-3"><i class="fas fa-folder-open fa-2x"></i></div>
+    <p class="has-text-grey">No {{ name.toLowerCase() }}s found.</p>
+  </div>
+
+  <div v-if="addItem" class="has-text-right mt-2">
+    <button type="button" class="button is-primary is-rounded px-4" @click="addItemLocal()">
+      <span class="icon"><i class="fas fa-plus"></i></span>
+      <span>Add {{ name.split(' ')[0] }}</span>
+    </button>
+  </div>
 </template>
 
 <script>

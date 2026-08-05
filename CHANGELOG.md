@@ -1,3 +1,8 @@
+## [0.5.0]
+* Add SQLite configuration database backend.
+* Handle SIGTERM signals gracefully and kill apps before tunnel drops.
+* Enhance Web UI with app management, runtime file browser improvements, DNS leak display, and IP info refinements.
+
 ## [0.4.0]
 * Migrate backend daemon architecture from Go to Python 3.11 (`python:3.11-slim-bookworm`).
 * Sort runtime files alphabetically and auto-scroll content view on selection in WebUI file explorer.

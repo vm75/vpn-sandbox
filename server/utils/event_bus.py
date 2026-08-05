@@ -24,3 +24,9 @@ def publish_event(event: Event):
         listeners = event_listeners.get(event.name, [])[:]
     for listener in listeners:
         threading.Thread(target=listener.handle_event, args=(event,)).start()
+
+def publish_event_sync(event: Event):
+    with event_mutex:
+        listeners = event_listeners.get(event.name, [])[:]
+    for listener in listeners:
+        listener.handle_event(event)

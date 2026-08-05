@@ -1,6 +1,18 @@
 <template>
   <div id="vpn-config-modal"></div>
-  <list-editor :name="vpnType + ' Servers'" :list="serverList" :editItem="editServer" :addItem="editServer"
+  <div class="level mb-4" style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+    <div class="level-left">
+      <h3 class="title is-4 mb-0">
+        <span class="icon-text is-align-items-center">
+          <span class="icon has-text-info mr-2">
+            <i :class="vpnType === 'OpenVPN' ? 'fas fa-shield-alt' : 'fas fa-network-wired'"></i>
+          </span>
+          <span>{{ vpnType }} Servers</span>
+        </span>
+      </h3>
+    </div>
+  </div>
+  <list-editor :name="vpnType + ' Server'" :list="serverList" :editItem="editServer" :addItem="editServer"
     :removeItem="deleteServer" :displayString="serversDisplayString">
   </list-editor>
 </template>

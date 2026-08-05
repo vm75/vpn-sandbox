@@ -49,7 +49,7 @@ The persistent volume has this shape:
 
 ```text
 /data/
-├── config/vpn-sandbox.db
+├── config/settings.json
 ├── var/                  # generated configs, logs, PIDs, and credentials
 └── apps.sh               # optional executable hook
 ```
