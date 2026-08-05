@@ -84,8 +84,7 @@ class IpInfoCache:
     def handle_event(self, event):
         self.mark_event(event.name, datetime.now())
         notify_status(event.name)
-        if self.refresh():
-            notify_status("ip-info")
+        threading.Thread(target=lambda: notify_status("ip-info") if self.refresh() else None).start()
 
 ip_info = IpInfoCache()
 

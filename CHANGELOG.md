@@ -1,3 +1,6 @@
+## [0.5.1]
+* Make IP info refresh asynchronous on events to prevent blocking SIGTERM shutdown.
+
 ## [0.5.0]
 * Add SQLite configuration database backend.
 * Handle SIGTERM signals gracefully and kill apps before tunnel drops.
